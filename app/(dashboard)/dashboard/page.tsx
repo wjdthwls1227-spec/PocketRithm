@@ -110,38 +110,38 @@ export default function DashboardPage() {
 
   return (
     <main className="min-h-screen" style={{ background: '#F7F7F8' }}>
-      <div className="max-w-4xl mx-auto px-5" style={{ paddingTop: '48px', paddingBottom: '80px' }}>
+      <div className="max-w-4xl mx-auto px-4 md:px-5" style={{ paddingTop: '24px', paddingBottom: '40px' }}>
         {/* 헤더 섹션 */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-semibold mb-3" style={{ color: '#111111', letterSpacing: '-0.5px', lineHeight: '1.3' }}>
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-xl md:text-2xl font-semibold mb-2 md:mb-3" style={{ color: '#111111', letterSpacing: '-0.5px', lineHeight: '1.3' }}>
             안녕하세요, {profile?.name || user?.email?.split('@')[0] || '사용자'}님 👋
           </h1>
-          <p className="text-base leading-relaxed mb-6" style={{ color: '#8E8E93' }}>
+          <p className="text-sm md:text-base leading-relaxed mb-4 md:mb-6" style={{ color: '#8E8E93' }}>
             오늘도 소비 습관을 개선하는 하루를 시작해보세요
           </p>
           
           {/* 후킹 메시지 카드 */}
-          <div className="card-toss p-7 mb-8 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #2864FF 0%, #1E4ED8 100%)', color: '#FFFFFF' }}>
+          <div className="card-toss p-4 md:p-7 mb-6 md:mb-8 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #2864FF 0%, #1E4ED8 100%)', color: '#FFFFFF' }}>
             <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-10" style={{ background: 'rgba(255, 255, 255, 0.3)', transform: 'translate(20%, -20%)' }}></div>
             <div className="relative z-10">
-              <div className="flex items-start gap-5">
-                <div className="text-4xl flex-shrink-0">💡</div>
+              <div className="flex items-start gap-3 md:gap-5">
+                <div className="text-3xl md:text-4xl flex-shrink-0">💡</div>
                 <div className="flex-1">
-                  <h3 className="text-xl font-semibold mb-3" style={{ color: '#FFFFFF', letterSpacing: '-0.3px' }}>
+                  <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-3" style={{ color: '#FFFFFF', letterSpacing: '-0.3px' }}>
                     가계부 회고로 만드는 나만의 소비 습관
                   </h3>
-                  <p className="text-sm leading-relaxed mb-5" style={{ color: 'rgba(255, 255, 255, 0.95)', lineHeight: '1.6' }}>
+                  <p className="text-xs md:text-sm leading-relaxed mb-4 md:mb-5" style={{ color: 'rgba(255, 255, 255, 0.95)', lineHeight: '1.6' }}>
                     단순 기록이 아닌 <strong style={{ fontWeight: '600' }}>욕망·결핍·필요</strong>로 분류하고, AI가 분석해주는 인사이트로 
                     진짜 필요한 소비만 하게 만드는 서비스입니다.
                   </p>
-                  <div className="flex flex-wrap gap-2.5">
-                    <span className="px-4 py-2 rounded-xl text-xs font-semibold backdrop-blur-sm" style={{ background: 'rgba(255, 255, 255, 0.25)', color: '#FFFFFF', border: '1px solid rgba(255, 255, 255, 0.3)' }}>
+                  <div className="flex flex-wrap gap-2 md:gap-2.5">
+                    <span className="px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs font-semibold backdrop-blur-sm" style={{ background: 'rgba(255, 255, 255, 0.25)', color: '#FFFFFF', border: '1px solid rgba(255, 255, 255, 0.3)' }}>
                       🎯 욕망·결핍·필요 구분
                     </span>
-                    <span className="px-4 py-2 rounded-xl text-xs font-semibold backdrop-blur-sm" style={{ background: 'rgba(255, 255, 255, 0.25)', color: '#FFFFFF', border: '1px solid rgba(255, 255, 255, 0.3)' }}>
+                    <span className="px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs font-semibold backdrop-blur-sm" style={{ background: 'rgba(255, 255, 255, 0.25)', color: '#FFFFFF', border: '1px solid rgba(255, 255, 255, 0.3)' }}>
                       🤖 AI 자동 분석
                     </span>
-                    <span className="px-4 py-2 rounded-xl text-xs font-semibold backdrop-blur-sm" style={{ background: 'rgba(255, 255, 255, 0.25)', color: '#FFFFFF', border: '1px solid rgba(255, 255, 255, 0.3)' }}>
+                    <span className="px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs font-semibold backdrop-blur-sm" style={{ background: 'rgba(255, 255, 255, 0.25)', color: '#FFFFFF', border: '1px solid rgba(255, 255, 255, 0.3)' }}>
                       📝 회고 기반 개선
                     </span>
                   </div>
@@ -152,12 +152,12 @@ export default function DashboardPage() {
         </div>
 
         {/* 주요 통계 요약 */}
-        <div className="mb-10">
-          <div className="stat-card p-7">
-            <div className="grid grid-cols-3 gap-8">
+        <div className="mb-6 md:mb-10">
+          <div className="stat-card p-4 md:p-7">
+            <div className="grid grid-cols-3 gap-2 md:gap-8">
               <div className="text-center">
-                <p className="text-xs mb-4 font-semibold uppercase tracking-wider" style={{ color: '#8E8E93', letterSpacing: '0.5px' }}>오늘 지출</p>
-                <p className="text-3xl font-bold mb-2" style={{ color: '#111111', letterSpacing: '-0.8px' }}>
+                <p className="text-xs mb-2 md:mb-4 font-semibold uppercase tracking-wider" style={{ color: '#8E8E93', letterSpacing: '0.5px' }}>오늘 지출</p>
+                <p className="text-xl md:text-3xl font-bold mb-1 md:mb-2" style={{ color: '#111111', letterSpacing: '-0.8px' }}>
                   {formatCurrency(todayTotal)}
                 </p>
                 {todayTotal > 0 && (
@@ -166,16 +166,16 @@ export default function DashboardPage() {
               </div>
               
               <div className="text-center border-l border-r" style={{ borderColor: '#F0F0F0' }}>
-                <p className="text-xs mb-4 font-semibold uppercase tracking-wider" style={{ color: '#8E8E93', letterSpacing: '0.5px' }}>이번 달</p>
-                <p className="text-3xl font-bold mb-2" style={{ color: '#111111', letterSpacing: '-0.8px' }}>
+                <p className="text-xs mb-2 md:mb-4 font-semibold uppercase tracking-wider" style={{ color: '#8E8E93', letterSpacing: '0.5px' }}>이번 달</p>
+                <p className="text-xl md:text-3xl font-bold mb-1 md:mb-2" style={{ color: '#111111', letterSpacing: '-0.8px' }}>
                   {formatCurrency(monthTotal)}
                 </p>
                 <p className="text-xs font-medium" style={{ color: '#8E8E93' }}>지난달 대비</p>
               </div>
               
               <div className="text-center">
-                <p className="text-xs mb-4 font-semibold uppercase tracking-wider" style={{ color: '#8E8E93', letterSpacing: '0.5px' }}>월 예산</p>
-                <p className="text-3xl font-bold mb-4" style={{ color: '#111111', letterSpacing: '-0.8px' }}>
+                <p className="text-xs mb-2 md:mb-4 font-semibold uppercase tracking-wider" style={{ color: '#8E8E93', letterSpacing: '0.5px' }}>월 예산</p>
+                <p className="text-xl md:text-3xl font-bold mb-2 md:mb-4" style={{ color: '#111111', letterSpacing: '-0.8px' }}>
                   {budget > 0 ? formatCurrency(budget) : '미설정'}
                 </p>
                 {budget > 0 && (

@@ -241,21 +241,21 @@ export default function TransactionsPage() {
   const totalExpense = expenses.reduce((sum, expense) => sum + expense.amount, 0)
 
   return (
-    <div className="min-h-screen bg-bg p-8">
+    <div className="min-h-screen bg-bg px-4 py-6 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* 헤더 */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold" style={{ color: '#111111' }}>거래 내역</h1>
-          <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold" style={{ color: '#111111' }}>거래 내역</h1>
+          <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
             <Link
               href="/dashboard/expenses/new"
-              className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition font-semibold text-sm"
+              className="flex-1 sm:flex-none px-3 py-2 md:px-4 md:py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition font-semibold text-xs md:text-sm text-center"
             >
               + 지출
             </Link>
             <Link
               href="/dashboard/income/new"
-              className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition font-semibold text-sm"
+              className="flex-1 sm:flex-none px-3 py-2 md:px-4 md:py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition font-semibold text-xs md:text-sm text-center"
             >
               + 수입
             </Link>
@@ -263,9 +263,9 @@ export default function TransactionsPage() {
         </div>
 
         {/* 필터 섹션 */}
-        <div className="bg-surface rounded-lg border border-border p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4" style={{ color: '#111111' }}>필터</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-surface rounded-lg border border-border p-4 md:p-6 mb-4 md:mb-6">
+          <h2 className="text-base md:text-lg font-semibold mb-3 md:mb-4" style={{ color: '#111111' }}>필터</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             <div>
               <label className="block text-sm font-medium mb-2" style={{ color: '#565656' }}>
                 기간
@@ -291,20 +291,20 @@ export default function TransactionsPage() {
         </div>
 
         {/* 요약 섹션 */}
-        <div className="mb-6">
-          <div className="bg-surface rounded-lg border border-border p-6">
-            <div className="grid grid-cols-3 gap-4">
+        <div className="mb-4 md:mb-6">
+          <div className="bg-surface rounded-lg border border-border p-4 md:p-6">
+            <div className="grid grid-cols-3 gap-2 md:gap-4">
               <div>
-                <p className="text-sm mb-1" style={{ color: '#8E8E93' }}>수입</p>
-                <p className="text-2xl font-bold" style={{ color: '#339AF0' }}>{formatCurrency(totalIncome)}</p>
+                <p className="text-xs md:text-sm mb-1" style={{ color: '#8E8E93' }}>수입</p>
+                <p className="text-lg md:text-2xl font-bold" style={{ color: '#339AF0' }}>{formatCurrency(totalIncome)}</p>
               </div>
               <div>
-                <p className="text-sm mb-1" style={{ color: '#8E8E93' }}>지출</p>
-                <p className="text-2xl font-bold" style={{ color: '#FF3B30' }}>{formatCurrency(totalExpense)}</p>
+                <p className="text-xs md:text-sm mb-1" style={{ color: '#8E8E93' }}>지출</p>
+                <p className="text-lg md:text-2xl font-bold" style={{ color: '#FF3B30' }}>{formatCurrency(totalExpense)}</p>
               </div>
               <div>
-                <p className="text-sm mb-1" style={{ color: '#8E8E93' }}>합계</p>
-                <p className="text-2xl font-bold" style={{ color: '#111111' }}>
+                <p className="text-xs md:text-sm mb-1" style={{ color: '#8E8E93' }}>합계</p>
+                <p className="text-lg md:text-2xl font-bold" style={{ color: '#111111' }}>
                   {formatCurrency(totalIncome - totalExpense)}
                 </p>
               </div>
@@ -343,28 +343,28 @@ export default function TransactionsPage() {
               {groupedTransactionsArray.map((group) => (
                 <div key={group.date}>
                   {/* 날짜 헤더 */}
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="text-2xl font-bold" style={{ color: '#111111' }}>
+                  <div className="flex items-center gap-2 md:gap-3 mb-3">
+                    <span className="text-xl md:text-2xl font-bold" style={{ color: '#111111' }}>
                       {getDayNumber(group.date)}
                     </span>
                     <span 
-                      className="px-2 py-1 rounded-md text-xs font-medium text-white"
+                      className="px-1.5 py-0.5 md:px-2 md:py-1 rounded-md text-xs font-medium text-white"
                       style={{ backgroundColor: '#339AF0' }}
                     >
                       {getDayOfWeek(group.date)}
                     </span>
-                    <div className="flex-1 flex items-center justify-end gap-2">
-                      <span className="text-sm" style={{ color: '#339AF0' }}>
+                    <div className="flex-1 flex items-center justify-end gap-1 md:gap-2">
+                      <span className="text-xs md:text-sm" style={{ color: '#339AF0' }}>
                         {formatCurrency(group.incomeTotal)}원
                       </span>
-                      <span className="text-sm" style={{ color: '#FF3B30' }}>
+                      <span className="text-xs md:text-sm" style={{ color: '#FF3B30' }}>
                         {formatCurrency(group.expenseTotal)}원
                       </span>
                     </div>
                   </div>
 
                   {/* 거래 항목 */}
-                  <div className="space-y-3">
+                  <div className="space-y-2 md:space-y-3">
                     {group.transactions.map((transaction) => {
                       const catInfo = getCategoryInfo(transaction.category, transaction.type)
                       const isExpense = transaction.type === 'expense'
@@ -373,17 +373,17 @@ export default function TransactionsPage() {
                         <Link
                           key={`${transaction.type}-${transaction.id}`}
                           href={`/dashboard/${transaction.type === 'expense' ? 'expenses' : 'income'}/${transaction.id}/edit`}
-                          className="flex items-center gap-3 p-3 rounded-lg bg-surface hover:bg-bg transition"
+                          className="flex items-center gap-2 md:gap-3 p-2.5 md:p-3 rounded-lg bg-surface hover:bg-bg transition"
                         >
-                          <div className="text-2xl">{catInfo.icon || (isExpense ? '📦' : '💰')}</div>
+                          <div className="text-xl md:text-2xl flex-shrink-0">{catInfo.icon || (isExpense ? '📦' : '💰')}</div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-0.5">
-                              <p className="text-sm font-medium" style={{ color: '#111111' }}>
+                            <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 flex-wrap">
+                              <p className="text-xs md:text-sm font-medium" style={{ color: '#111111' }}>
                                 {transaction.category}
                               </p>
                               {isExpense && transaction.expenseType && (
                                 <span 
-                                  className="px-1.5 py-0.5 rounded text-xs font-medium text-white"
+                                  className="px-1 py-0.5 md:px-1.5 md:py-0.5 rounded text-xs font-medium text-white flex-shrink-0"
                                   style={{ backgroundColor: getTypeColor(transaction.expenseType) }}
                                 >
                                   {getTypeLabel(transaction.expenseType)}
@@ -396,9 +396,9 @@ export default function TransactionsPage() {
                               </p>
                             )}
                           </div>
-                          <div className="text-right">
+                          <div className="text-right flex-shrink-0">
                             <p 
-                              className="text-base font-semibold" 
+                              className="text-sm md:text-base font-semibold" 
                               style={{ color: isExpense ? '#FF3B30' : '#339AF0' }}
                             >
                               {isExpense ? '-' : '+'}{formatCurrency(transaction.amount)}원

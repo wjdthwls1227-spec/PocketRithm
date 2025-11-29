@@ -69,16 +69,16 @@ export default function DashboardNav() {
 
   return (
     <nav className="bg-bg border-b border-border">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex justify-between h-16">
+      <div className="max-w-7xl mx-auto px-3 md:px-4">
+        <div className="flex justify-between h-14 md:h-16">
           <div className="flex items-center">
-            <Link href="/dashboard" className="text-lg font-semibold text-accent">
+            <Link href="/dashboard" className="text-base md:text-lg font-semibold text-accent">
               포켓리즘
             </Link>
-            <div className="ml-8 flex items-center gap-1">
+            <div className="ml-4 md:ml-8 flex items-center gap-0.5 md:gap-1">
               <Link
                 href="/dashboard"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition ${
+                className={`px-2 py-1.5 md:px-3 md:py-2 rounded-md text-xs md:text-sm font-medium transition ${
                   isActive('/dashboard') && pathname === '/dashboard'
                     ? 'bg-surface text-textPrimary'
                     : 'text-textSecondary hover:text-textPrimary'
@@ -91,7 +91,7 @@ export default function DashboardNav() {
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition flex items-center gap-1 ${
+                  className={`px-2 py-1.5 md:px-3 md:py-2 rounded-md text-xs md:text-sm font-medium transition flex items-center gap-1 ${
                     isActive('/dashboard/expenses') || isActive('/dashboard/income') || isActive('/dashboard/transactions')
                       ? 'bg-surface text-textPrimary'
                       : 'text-textSecondary hover:text-textPrimary'
@@ -99,7 +99,7 @@ export default function DashboardNav() {
                 >
                   가계부
                   <svg
-                    className={`w-4 h-4 transition-transform ${
+                    className={`w-3 h-3 md:w-4 md:h-4 transition-transform ${
                       isAccountMenuOpen ? 'rotate-180' : ''
                     }`}
                     fill="none"
@@ -116,7 +116,7 @@ export default function DashboardNav() {
                 </button>
 
                 {isAccountMenuOpen && (
-                  <div className="absolute top-full left-0 mt-1 w-40 bg-bg border border-border rounded-md py-1 z-50">
+                  <div className="absolute top-full left-0 mt-1 w-36 md:w-40 bg-bg border border-border rounded-md py-1 z-50">
                     <Link
                       href="/dashboard/transactions"
                       onClick={() => setIsAccountMenuOpen(false)}
@@ -156,7 +156,7 @@ export default function DashboardNav() {
 
               <Link
                 href="/dashboard/statistics"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition ${
+                className={`px-2 py-1.5 md:px-3 md:py-2 rounded-md text-xs md:text-sm font-medium transition ${
                   isActive('/dashboard/statistics')
                     ? 'bg-surface text-textPrimary'
                     : 'text-textSecondary hover:text-textPrimary'
@@ -167,7 +167,7 @@ export default function DashboardNav() {
 
               <Link
                 href="/dashboard/retrospectives"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition ${
+                className={`px-2 py-1.5 md:px-3 md:py-2 rounded-md text-xs md:text-sm font-medium transition ${
                   isActive('/dashboard/retrospectives')
                     ? 'bg-surface text-textPrimary'
                     : 'text-textSecondary hover:text-textPrimary'
@@ -178,7 +178,7 @@ export default function DashboardNav() {
 
               <Link
                 href="/challenges"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition ${
+                className={`hidden sm:block px-2 py-1.5 md:px-3 md:py-2 rounded-md text-xs md:text-sm font-medium transition ${
                   pathname === '/challenges'
                     ? 'bg-surface text-textPrimary'
                     : 'text-textSecondary hover:text-textPrimary'
@@ -189,7 +189,7 @@ export default function DashboardNav() {
 
               <Link
                 href="/articles"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition ${
+                className={`hidden sm:block px-2 py-1.5 md:px-3 md:py-2 rounded-md text-xs md:text-sm font-medium transition ${
                   pathname === '/articles'
                     ? 'bg-surface text-textPrimary'
                     : 'text-textSecondary hover:text-textPrimary'
@@ -200,21 +200,21 @@ export default function DashboardNav() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
             {/* 사용자 프로필 드롭다운 */}
             <div className="relative" ref={userMenuRef}>
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-textSecondary hover:text-textPrimary transition"
+                className="flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium text-textSecondary hover:text-textPrimary transition"
               >
-                <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-white text-sm font-semibold">
+                <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-accent flex items-center justify-center text-white text-xs md:text-sm font-semibold">
                   {profile?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
                 </div>
                 <span className="hidden md:inline-block">
                   {profile?.name || user?.email?.split('@')[0] || '사용자'}
                 </span>
                 <svg
-                  className={`w-4 h-4 transition-transform ${
+                  className={`w-3 h-3 md:w-4 md:h-4 transition-transform ${
                     isUserMenuOpen ? 'rotate-180' : ''
                   }`}
                   fill="none"
@@ -231,7 +231,7 @@ export default function DashboardNav() {
               </button>
 
               {isUserMenuOpen && (
-                <div className="absolute top-full right-0 mt-1 w-48 bg-bg border border-border rounded-md py-1 z-50 shadow-lg">
+                <div className="absolute top-full right-0 mt-1 w-44 md:w-48 bg-bg border border-border rounded-md py-1 z-50 shadow-lg">
                   <Link
                     href="/dashboard/profile"
                     onClick={() => setIsUserMenuOpen(false)}

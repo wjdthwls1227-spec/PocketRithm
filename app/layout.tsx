@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   description: '지출 패턴을 분석하고 회고를 통해 더 나은 소비 습관을 만드는 서비스',
   other: {
     'naver-site-verification': '841880ae2b126b2cfd761a1906c50a2650b5b034',
+    'google-site-verification': 'fOUDBEH_qWH7pZYNdgWZupDSdXsFzcLkDPeqQEXNgAg',
   },
 }
 

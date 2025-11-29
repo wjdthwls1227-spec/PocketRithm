@@ -201,23 +201,23 @@ export default function ExpensesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg p-8">
+    <div className="min-h-screen bg-bg px-4 py-6 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* 헤더 */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold" style={{ color: '#111111' }}>지출 관리</h1>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold" style={{ color: '#111111' }}>지출 관리</h1>
           <Link
             href="/dashboard/expenses/new"
-            className="px-6 py-3 bg-accent text-white rounded-lg hover:opacity-90 transition font-semibold"
+            className="px-4 py-2 md:px-6 md:py-3 bg-accent text-white rounded-lg hover:opacity-90 transition font-semibold text-sm md:text-base whitespace-nowrap"
           >
             + 지출 추가
           </Link>
         </div>
 
         {/* 필터 섹션 */}
-        <div className="bg-surface rounded-lg border border-border p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4" style={{ color: '#111111' }}>필터</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-surface rounded-lg border border-border p-4 md:p-6 mb-4 md:mb-6">
+          <h2 className="text-base md:text-lg font-semibold mb-3 md:mb-4" style={{ color: '#111111' }}>필터</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
             <div>
               <label className="block text-sm font-medium mb-2" style={{ color: '#565656' }}>
                 타입
@@ -279,20 +279,20 @@ export default function ExpensesPage() {
         </div>
 
         {/* 요약 섹션 */}
-        <div className="mb-6">
-          <div className="bg-surface rounded-lg border border-border p-6">
-            <div className="grid grid-cols-3 gap-4">
+        <div className="mb-4 md:mb-6">
+          <div className="bg-surface rounded-lg border border-border p-4 md:p-6">
+            <div className="grid grid-cols-3 gap-2 md:gap-4">
               <div>
-                <p className="text-sm mb-1" style={{ color: '#8E8E93' }}>수입</p>
-                <p className="text-2xl font-bold" style={{ color: '#339AF0' }}>0</p>
+                <p className="text-xs md:text-sm mb-1" style={{ color: '#8E8E93' }}>수입</p>
+                <p className="text-lg md:text-2xl font-bold" style={{ color: '#339AF0' }}>0</p>
               </div>
               <div>
-                <p className="text-sm mb-1" style={{ color: '#8E8E93' }}>지출</p>
-                <p className="text-2xl font-bold" style={{ color: '#FF3B30' }}>{formatCurrency(totalExpense)}</p>
+                <p className="text-xs md:text-sm mb-1" style={{ color: '#8E8E93' }}>지출</p>
+                <p className="text-lg md:text-2xl font-bold" style={{ color: '#FF3B30' }}>{formatCurrency(totalExpense)}</p>
               </div>
               <div>
-                <p className="text-sm mb-1" style={{ color: '#8E8E93' }}>합계</p>
-                <p className="text-2xl font-bold" style={{ color: '#111111' }}>{formatCurrency(-totalExpense)}</p>
+                <p className="text-xs md:text-sm mb-1" style={{ color: '#8E8E93' }}>합계</p>
+                <p className="text-lg md:text-2xl font-bold" style={{ color: '#111111' }}>{formatCurrency(-totalExpense)}</p>
               </div>
             </div>
           </div>
@@ -322,44 +322,44 @@ export default function ExpensesPage() {
                 return (
                   <div key={group.date}>
                     {/* 날짜 헤더 */}
-                    <div className="flex items-center gap-3 mb-3">
-                      <span className="text-2xl font-bold" style={{ color: '#111111' }}>
+                    <div className="flex items-center gap-2 md:gap-3 mb-3">
+                      <span className="text-xl md:text-2xl font-bold" style={{ color: '#111111' }}>
                         {getDayNumber(group.date)}
                       </span>
                       <span 
-                        className="px-2 py-1 rounded-md text-xs font-medium text-white"
+                        className="px-1.5 py-0.5 md:px-2 md:py-1 rounded-md text-xs font-medium text-white"
                         style={{ backgroundColor: '#339AF0' }}
                       >
                         {getDayOfWeek(group.date)}
                       </span>
-                      <div className="flex-1 flex items-center justify-end gap-2">
-                        <span className="text-sm" style={{ color: '#339AF0' }}>
+                      <div className="flex-1 flex items-center justify-end gap-1 md:gap-2">
+                        <span className="text-xs md:text-sm" style={{ color: '#339AF0' }}>
                           {formatCurrency(group.total)}원
                         </span>
-                        <span className="text-sm" style={{ color: '#FF3B30' }}>
+                        <span className="text-xs md:text-sm" style={{ color: '#FF3B30' }}>
                           0원
                         </span>
                       </div>
                     </div>
 
                     {/* 지출 항목 */}
-                    <div className="space-y-3">
+                    <div className="space-y-2 md:space-y-3">
                       {group.expenses.map((expense) => {
                         const catInfo = getCategoryInfo(expense.category)
                         return (
                           <Link
                             key={expense.id}
                             href={`/dashboard/expenses/${expense.id}/edit`}
-                            className="flex items-center gap-3 p-3 rounded-lg bg-surface hover:bg-bg transition"
+                            className="flex items-center gap-2 md:gap-3 p-2.5 md:p-3 rounded-lg bg-surface hover:bg-bg transition"
                           >
-                            <div className="text-2xl">{catInfo.icon || '📦'}</div>
+                            <div className="text-xl md:text-2xl flex-shrink-0">{catInfo.icon || '📦'}</div>
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-0.5">
-                                <p className="text-sm font-medium" style={{ color: '#111111' }}>
+                              <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 flex-wrap">
+                                <p className="text-xs md:text-sm font-medium" style={{ color: '#111111' }}>
                                   {expense.category}
                                 </p>
                                 <span 
-                                  className="px-1.5 py-0.5 rounded text-xs font-medium text-white"
+                                  className="px-1 py-0.5 md:px-1.5 md:py-0.5 rounded text-xs font-medium text-white flex-shrink-0"
                                   style={{ backgroundColor: getTypeColor(expense.type) }}
                                 >
                                   {getTypeLabel(expense.type)}
@@ -371,8 +371,8 @@ export default function ExpensesPage() {
                                 </p>
                               )}
                             </div>
-                            <div className="text-right">
-                              <p className="text-base font-semibold" style={{ color: '#FF3B30' }}>
+                            <div className="text-right flex-shrink-0">
+                              <p className="text-sm md:text-base font-semibold" style={{ color: '#FF3B30' }}>
                                 {formatCurrency(expense.amount)}원
                               </p>
                             </div>
