@@ -23,6 +23,7 @@ export type Expense = {
   type: 'desire' | 'lack' | 'need'
   emotions: string[]
   reason?: string
+  analysis?: string // 지출분석/회고
   date: string
   createdAt: string
 }
@@ -32,6 +33,7 @@ export type Income = {
   userId: string
   amount: number
   source: string
+  memo?: string
   date: string
   createdAt: string
 }

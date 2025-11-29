@@ -321,7 +321,8 @@ export default function SignupPage() {
             </button>
           </form>
 
-          {/* 구분선 */}
+          {/* 구글 회원가입 - 도메인 구매 및 앱 안정화 후 재활성화 예정 */}
+          {/* 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300"></div>
@@ -331,7 +332,6 @@ export default function SignupPage() {
             </div>
           </div>
 
-          {/* 구글 회원가입 버튼 */}
           <button
             onClick={handleGoogleSignup}
             className="w-full py-3 bg-white border-2 border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition flex items-center justify-center gap-3"
@@ -356,6 +356,7 @@ export default function SignupPage() {
             </svg>
             <span style={{ color: '#111111' }}>구글로 시작하기</span>
           </button>
+          */}
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">

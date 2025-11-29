@@ -87,6 +87,31 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* 카테고리 관리 */}
+        <div className="card-toss p-7 mb-6">
+          <h2 className="text-lg font-semibold mb-4" style={{ color: '#111111' }}>카테고리 관리</h2>
+          <div className="space-y-4">
+            <div className="p-5 rounded-xl border border-border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-base mb-1" style={{ color: '#111111' }}>
+                    지출/수입 카테고리
+                  </h3>
+                  <p className="text-sm" style={{ color: '#8E8E93' }}>
+                    사용할 카테고리를 추가하고 관리하세요
+                  </p>
+                </div>
+                <Link
+                  href="/dashboard/settings/categories"
+                  className="px-5 py-2.5 rounded-button font-semibold text-sm transition-all bg-accent text-white hover:opacity-90"
+                >
+                  관리하기
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* 위험한 작업 */}
         <div className="card-toss p-7">
           <h2 className="text-lg font-semibold mb-4" style={{ color: '#111111' }}>위험한 작업</h2>

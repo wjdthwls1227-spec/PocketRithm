@@ -4,13 +4,15 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import type { Expense } from '@/types/database'
 
 const emotions = ['행복', '스트레스', '외로움', '지루함', '축하', '보상', '피곤', '불안']
-const commonCategories = [
-  '식비', '카페', '교통비', '쇼핑', '의류', '뷰티', '취미', '여행',
-  '건강', '교육', '문화', '기타'
-]
+
+type Category = {
+  id: string
+  name: string
+  icon: string | null
+  color: string | null
+}
 
 export default function EditExpensePage() {
   const router = useRouter()
@@ -20,6 +22,8 @@ export default function EditExpensePage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loadingCategories, setLoadingCategories] = useState(true)
   
   const [formData, setFormData] = useState({
     amount: '',
@@ -27,12 +31,50 @@ export default function EditExpensePage() {
     date: '',
     type: 'need' as 'desire' | 'lack' | 'need',
     emotions: [] as string[],
-    reason: '',
+    reason: '', // 제목
+    analysis: '', // 지출분석/회고
   })
+
+  const [showEmotions, setShowEmotions] = useState(false)
 
   useEffect(() => {
     loadExpense()
+    loadCategories()
   }, [expenseId])
+
+  const loadCategories = async () => {
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) return
+
+      // 사용자 카테고리 가져오기
+      const { data: userCategories, error: categoryError } = await supabase
+        .from('user_categories')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('type', 'expense')
+        .order('order_index', { ascending: true })
+
+      if (categoryError) {
+        console.error('카테고리 로드 오류:', categoryError)
+      }
+
+      if (userCategories && userCategories.length > 0) {
+        setCategories(userCategories.map(cat => ({
+          id: cat.id,
+          name: cat.name,
+          icon: cat.icon,
+          color: cat.color,
+        })))
+      }
+    } catch (err) {
+      console.error('카테고리 로드 오류:', err)
+    } finally {
+      setLoadingCategories(false)
+    }
+  }
 
   const loadExpense = async () => {
     try {
@@ -64,6 +106,7 @@ export default function EditExpensePage() {
         type: data.type,
         emotions: data.emotions || [],
         reason: data.reason || '',
+        analysis: data.analysis || '',
       })
     } catch (err) {
       setError('지출을 불러오는 중 오류가 발생했습니다.')
@@ -71,6 +114,16 @@ export default function EditExpensePage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleAmountChange = (value: string) => {
+    // 숫자만 허용하고 쉼표 제거
+    const numericValue = value.replace(/[^0-9]/g, '')
+    setFormData(prev => ({ ...prev, amount: numericValue }))
+  }
+
+  const handleCategorySelect = (categoryName: string) => {
+    setFormData({ ...formData, category: categoryName })
   }
 
   const handleEmotionToggle = (emotion: string) => {
@@ -84,6 +137,12 @@ export default function EditExpensePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!formData.amount || !formData.category || !formData.reason) {
+      setError('금액, 카테고리, 제목을 입력해주세요.')
+      return
+    }
+
     setSaving(true)
     setError(null)
 
@@ -96,21 +155,34 @@ export default function EditExpensePage() {
         return
       }
 
+      const updateData: any = {
+        amount: parseInt(formData.amount),
+        category: formData.category,
+        date: formData.date,
+        type: formData.type,
+        emotions: formData.emotions,
+        reason: formData.reason,
+      }
+
+      // analysis 필드가 있으면 추가 (데이터베이스에 컬럼이 있을 때만)
+      if (formData.analysis) {
+        updateData.analysis = formData.analysis
+      }
+
       const { error: updateError } = await supabase
         .from('expenses')
-        .update({
-          amount: parseInt(formData.amount),
-          category: formData.category,
-          date: formData.date,
-          type: formData.type,
-          emotions: formData.emotions,
-          reason: formData.reason || null,
-        })
+        .update(updateData)
         .eq('id', expenseId)
         .eq('user_id', user.id)
 
       if (updateError) {
-        setError(updateError.message)
+        console.error('지출 수정 오류:', updateError)
+        // analysis 컬럼 관련 에러인지 확인
+        if (updateError.message.includes('analysis') || updateError.message.includes('column')) {
+          setError('데이터베이스 업데이트가 필요합니다. 관리자에게 문의해주세요.')
+        } else {
+          setError(updateError.message)
+        }
         setSaving(false)
         return
       }
@@ -122,96 +194,173 @@ export default function EditExpensePage() {
     }
   }
 
+  const formatAmount = (amount: string) => {
+    if (!amount) return '0'
+    const numericValue = amount.replace(/,/g, '')
+    return parseInt(numericValue || '0').toLocaleString()
+  }
+
   if (loading) {
     return (
-      <div className="p-8">
-        <div className="max-w-2xl mx-auto text-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <p className="text-gray-600">로딩 중...</p>
+      <div className="min-h-screen bg-bg">
+        <div className="max-w-md mx-auto">
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent mx-auto mb-4"></div>
+              <p className="text-sm" style={{ color: '#8E8E93' }}>로딩 중...</p>
+            </div>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="p-8">
-      <div className="max-w-2xl mx-auto">
-        <div className="mb-6">
-          <Link
-            href="/dashboard/expenses"
-            className="text-blue-600 hover:underline"
-          >
-            ← 지출 목록으로
-          </Link>
+    <div className="min-h-screen bg-bg">
+      <div className="max-w-md mx-auto">
+        {/* 헤더 */}
+        <div className="sticky top-0 bg-bg border-b border-border px-4 py-3 z-10">
+          <div className="flex items-center justify-between">
+            <Link
+              href="/dashboard/expenses"
+              className="text-textSecondary hover:text-textPrimary"
+            >
+              ← 취소
+            </Link>
+            <h1 className="text-lg font-semibold" style={{ color: '#111111' }}>
+              지출 수정
+            </h1>
+            <button
+              onClick={handleSubmit}
+              disabled={saving || !formData.amount || !formData.category || !formData.reason}
+              className="text-accent font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saving ? '저장 중...' : '저장'}
+            </button>
+          </div>
         </div>
 
-        <h1 className="text-3xl font-bold mb-6">지출 수정</h1>
-
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-8 space-y-6">
+        <form onSubmit={handleSubmit} className="px-4 py-6 space-y-6">
+          {/* 제목 입력 */}
           <div>
-            <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: '#565656' }}>
+              제목 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.reason}
+              onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+              className="w-full px-4 py-3 border border-border rounded-input bg-surface"
+              placeholder="예: 점심 식사, 커피, 교통비 등"
+              required
+            />
+          </div>
+
+          {/* 금액 입력 */}
+          <div>
+            <label className="block text-sm font-medium mb-2" style={{ color: '#565656' }}>
               금액 <span className="text-red-500">*</span>
             </label>
-            <input
-              id="amount"
-              type="number"
-              value={formData.amount}
-              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              min="1"
-              required
-            />
+            <div className="relative">
+              <input
+                type="text"
+                inputMode="numeric"
+                value={formData.amount ? formatAmount(formData.amount) : ''}
+                onChange={(e) => handleAmountChange(e.target.value)}
+                className="w-full pl-4 pr-16 py-3 font-semibold border border-border rounded-input bg-surface text-right"
+                placeholder="0"
+                style={{ color: '#111111' }}
+              />
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 font-semibold pointer-events-none" style={{ color: '#8E8E93' }}>
+                원
+              </span>
+            </div>
           </div>
 
+          {/* 날짜 선택 */}
           <div>
-            <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
-              카테고리 <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium mb-2" style={{ color: '#565656' }}>
+              날짜
             </label>
             <input
-              id="category"
-              type="text"
-              value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
-              날짜 <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="date"
               type="date"
               value={formData.date}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
+              className="w-full px-4 py-3 border border-border rounded-input bg-surface"
             />
           </div>
 
+          {/* 카테고리 선택 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              타입 <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium mb-3" style={{ color: '#565656' }}>
+              카테고리
             </label>
-            <div className="grid grid-cols-3 gap-4">
+            {loadingCategories ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-accent mx-auto"></div>
+              </div>
+            ) : categories.length > 0 ? (
+              <div className="grid grid-cols-4 gap-3">
+                {categories.map((category) => (
+                  <button
+                    key={category.id}
+                    type="button"
+                    onClick={() => handleCategorySelect(category.name)}
+                    className={`p-4 rounded-button border-2 transition ${
+                      formData.category === category.name
+                        ? 'border-accent bg-accent/10'
+                        : 'border-border bg-surface hover:border-accent/50'
+                    }`}
+                    style={{
+                      backgroundColor: formData.category === category.name && category.color
+                        ? `${category.color}20`
+                        : undefined,
+                    }}
+                  >
+                    <div className="text-2xl mb-1">{category.icon || '📦'}</div>
+                    <div className="text-xs font-medium" style={{ color: '#111111' }}>
+                      {category.name}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-sm mb-4" style={{ color: '#8E8E93' }}>
+                  카테고리가 없습니다.
+                </p>
+                <Link
+                  href="/dashboard/settings/categories"
+                  className="text-sm text-accent hover:underline"
+                >
+                  카테고리 설정하기 →
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* 타입 선택 */}
+          <div>
+            <label className="block text-sm font-medium mb-3" style={{ color: '#565656' }}>
+              지출 유형
+            </label>
+            <div className="grid grid-cols-3 gap-3">
               {(['need', 'desire', 'lack'] as const).map((type) => (
                 <button
                   key={type}
                   type="button"
                   onClick={() => setFormData({ ...formData, type })}
-                  className={`px-4 py-3 rounded-lg border-2 transition ${
+                  className={`py-3 rounded-button border-2 transition ${
                     formData.type === type
                       ? type === 'need'
-                        ? 'border-blue-500 bg-blue-50'
+                        ? 'border-typeNeed bg-typeNeed/10'
                         : type === 'desire'
-                        ? 'border-pink-500 bg-pink-50'
-                        : 'border-yellow-500 bg-yellow-50'
-                      : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-typeDesire bg-typeDesire/10'
+                        : 'border-typeLack bg-typeLack/10'
+                      : 'border-border bg-surface hover:border-accent/50'
                   }`}
                 >
-                  <div className="font-semibold">
+                  <div className="font-semibold text-sm mb-1" style={{ color: '#111111' }}>
                     {type === 'need' ? '필요' : type === 'desire' ? '욕망' : '결핍'}
                   </div>
                 </button>
@@ -219,65 +368,70 @@ export default function EditExpensePage() {
             </div>
           </div>
 
+          {/* 지출분석/회고 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              감정 (복수 선택 가능)
-            </label>
-            <div className="grid grid-cols-4 gap-2">
-              {emotions.map((emotion) => (
-                <button
-                  key={emotion}
-                  type="button"
-                  onClick={() => handleEmotionToggle(emotion)}
-                  className={`px-3 py-2 rounded-lg border transition ${
-                    formData.emotions.includes(emotion)
-                      ? 'bg-blue-100 border-blue-500 text-blue-700'
-                      : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  {emotion}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-2">
-              지출 이유
+            <label className="block text-sm font-medium mb-2" style={{ color: '#565656' }}>
+              지출분석/회고
             </label>
             <textarea
-              id="reason"
-              value={formData.reason}
-              onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              rows={3}
+              value={formData.analysis}
+              onChange={(e) => setFormData({ ...formData, analysis: e.target.value })}
+              className="w-full px-4 py-3 border border-border rounded-input bg-surface resize-none"
+              placeholder="왜 이 지출을 하게 되었나요?"
+              rows={4}
             />
           </div>
 
-          {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-          )}
+          {/* 감정 태그 (선택사항) */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowEmotions(!showEmotions)}
+              className="flex items-center justify-between w-full px-4 py-3 border border-border rounded-input bg-surface"
+            >
+              <span className="text-sm" style={{ color: '#565656' }}>
+                감정 태그 {formData.emotions.length > 0 && `(${formData.emotions.length})`}
+              </span>
+              <span className="text-textTertiary">{showEmotions ? '▲' : '▼'}</span>
+            </button>
+            {showEmotions && (
+              <div className="mt-3 grid grid-cols-4 gap-2">
+                {emotions.map((emotion) => (
+                  <button
+                    key={emotion}
+                    type="button"
+                    onClick={() => handleEmotionToggle(emotion)}
+                    className={`py-2 rounded-button text-xs transition ${
+                      formData.emotions.includes(emotion)
+                        ? 'bg-accent text-white'
+                        : 'bg-surface border border-border text-textSecondary'
+                    }`}
+                  >
+                    {emotion}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
-          <div className="flex gap-4">
+          {/* 저장 버튼 */}
+          <div className="pt-2">
             <button
               type="submit"
-              disabled={saving}
-              className="flex-1 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50"
+              disabled={saving || !formData.amount || !formData.category || !formData.reason}
+              className="w-full py-4 bg-accent text-white rounded-button font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               {saving ? '저장 중...' : '저장'}
             </button>
-            <Link
-              href="/dashboard/expenses"
-              className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition"
-            >
-              취소
-            </Link>
           </div>
+
+          {error && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-input">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
         </form>
       </div>
     </div>
   )
 }
-

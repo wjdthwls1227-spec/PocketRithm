@@ -7,6 +7,9 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: '포켓리즘 - 지출 회고로 만드는 나만의 소비 습관',
   description: '지출 패턴을 분석하고 회고를 통해 더 나은 소비 습관을 만드는 서비스',
+  other: {
+    'naver-site-verification': '841880ae2b126b2cfd761a1906c50a2650b5b034',
+  },
 }
 
 export default function RootLayout({

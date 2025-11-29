@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { isAdmin } from '@/lib/utils/admin'
 
 export default async function AdminPage() {
   const supabase = await createClient()
@@ -9,16 +10,10 @@ export default async function AdminPage() {
     redirect('/login')
   }
 
-  // TODO: 어드민 권한 체크 로직 추가
-  // const { data: profile } = await supabase
-  //   .from('profiles')
-  //   .select('*')
-  //   .eq('id', user.id)
-  //   .single()
-  
-  // if (profile?.role !== 'admin') {
-  //   redirect('/dashboard')
-  // }
+  // 어드민 권한 체크
+  if (!isAdmin(user.email)) {
+    redirect('/dashboard')
+  }
 
   return (
     <div className="p-8">

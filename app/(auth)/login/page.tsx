@@ -254,7 +254,8 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* 구분선 */}
+          {/* 구글 로그인 - 도메인 구매 및 앱 안정화 후 재활성화 예정 */}
+          {/* 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300"></div>
@@ -264,7 +265,6 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* 구글 로그인 버튼 */}
           <button
             onClick={handleGoogleLogin}
             className="w-full py-3 bg-white border-2 border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition flex items-center justify-center gap-3"
@@ -289,6 +289,7 @@ export default function LoginPage() {
             </svg>
             <span style={{ color: '#111111' }}>구글로 로그인</span>
           </button>
+          */}
 
           <div className="mt-6 space-y-3">
             <div className="text-center">

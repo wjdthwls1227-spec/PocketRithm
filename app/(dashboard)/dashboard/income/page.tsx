@@ -5,17 +5,69 @@ import { createClient } from '@/lib/supabase/client'
 import type { Income } from '@/types/database'
 import Link from 'next/link'
 
+type Category = {
+  id: string
+  name: string
+  icon: string | null
+  color: string | null
+}
+
+type GroupedIncome = {
+  date: string
+  incomes: Income[]
+  total: number
+}
+
 export default function IncomePage() {
   const [incomes, setIncomes] = useState<Income[]>([])
+  const [categories, setCategories] = useState<Map<string, Category>>(new Map())
   const [loading, setLoading] = useState(true)
   const [dateRange, setDateRange] = useState({ start: '', end: '' })
+
+  useEffect(() => {
+    loadCategories()
+  }, [])
 
   useEffect(() => {
     loadIncomes()
   }, [dateRange])
 
+  const loadCategories = async () => {
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) return
+
+      const { data, error } = await supabase
+        .from('user_categories')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('type', 'income')
+
+      if (error) {
+        console.error('카테고리 로드 오류:', error)
+        return
+      }
+
+      const categoryMap = new Map<string, Category>()
+      data?.forEach(cat => {
+        categoryMap.set(cat.name, {
+          id: cat.id,
+          name: cat.name,
+          icon: cat.icon,
+          color: cat.color,
+        })
+      })
+      setCategories(categoryMap)
+    } catch (err) {
+      console.error('카테고리 로드 오류:', err)
+    }
+  }
+
   const loadIncomes = async () => {
     try {
+      setLoading(true)
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
 
@@ -74,38 +126,70 @@ export default function IncomePage() {
   }
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('ko-KR').format(amount) + '원'
+    return new Intl.NumberFormat('ko-KR').format(amount)
   }
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('ko-KR', {
-      year: 'numeric',
       month: 'long',
       day: 'numeric',
     })
   }
 
-  const totalAmount = incomes.reduce((sum, income) => sum + income.amount, 0)
+  const getDayOfWeek = (date: string) => {
+    const days = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일']
+    return days[new Date(date).getDay()]
+  }
+
+  const getDayNumber = (date: string) => {
+    return new Date(date).getDate().toString()
+  }
+
+  // 날짜별로 그룹화
+  const groupedIncomes = incomes.reduce((acc, income) => {
+    const date = income.date
+    if (!acc[date]) {
+      acc[date] = {
+        date,
+        incomes: [],
+        total: 0,
+      }
+    }
+    acc[date].incomes.push(income)
+    acc[date].total += income.amount
+    return acc
+  }, {} as Record<string, GroupedIncome>)
+
+  const groupedIncomesArray = Object.values(groupedIncomes).sort((a, b) => 
+    new Date(b.date).getTime() - new Date(a.date).getTime()
+  )
+
+  const totalIncome = incomes.reduce((sum, income) => sum + income.amount, 0)
+
+  const getCategoryInfo = (categoryName: string) => {
+    return categories.get(categoryName) || { id: '', name: categoryName, icon: '💰', color: '#51CF66' }
+  }
 
   return (
-    <div className="p-8">
+    <div className="min-h-screen bg-bg p-8">
       <div className="max-w-7xl mx-auto">
+        {/* 헤더 */}
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">수입 관리</h1>
+          <h1 className="text-3xl font-bold" style={{ color: '#111111' }}>수입 관리</h1>
           <Link
             href="/dashboard/income/new"
-            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+            className="px-6 py-3 bg-accent text-white rounded-lg hover:opacity-90 transition font-semibold"
           >
             + 수입 추가
           </Link>
         </div>
 
         {/* 필터 섹션 */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">필터</h2>
+        <div className="bg-surface rounded-lg border border-border p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-4" style={{ color: '#111111' }}>필터</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium mb-2" style={{ color: '#565656' }}>
                 기간
               </label>
               <div className="flex gap-2">
@@ -113,83 +197,121 @@ export default function IncomePage() {
                   type="date"
                   value={dateRange.start}
                   onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                  className="flex-1 px-4 py-2 border border-border rounded-input bg-bg focus:ring-2 focus:ring-accent focus:border-transparent"
+                  style={{ color: '#111111' }}
                 />
                 <input
                   type="date"
                   value={dateRange.end}
                   onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                  className="flex-1 px-4 py-2 border border-border rounded-input bg-bg focus:ring-2 focus:ring-accent focus:border-transparent"
+                  style={{ color: '#111111' }}
                 />
               </div>
             </div>
           </div>
         </div>
 
-        {/* 통계 */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-sm text-gray-600">총 수입</p>
-              <p className="text-2xl font-bold text-green-600">{formatCurrency(totalAmount)}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">기록 수</p>
-              <p className="text-2xl font-bold">{incomes.length}건</p>
+        {/* 요약 섹션 */}
+        <div className="mb-6">
+          <div className="bg-surface rounded-lg border border-border p-6">
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <p className="text-sm mb-1" style={{ color: '#8E8E93' }}>수입</p>
+                <p className="text-2xl font-bold" style={{ color: '#339AF0' }}>{formatCurrency(totalIncome)}</p>
+              </div>
+              <div>
+                <p className="text-sm mb-1" style={{ color: '#8E8E93' }}>지출</p>
+                <p className="text-2xl font-bold" style={{ color: '#FF3B30' }}>0</p>
+              </div>
+              <div>
+                <p className="text-sm mb-1" style={{ color: '#8E8E93' }}>합계</p>
+                <p className="text-2xl font-bold" style={{ color: '#111111' }}>{formatCurrency(totalIncome)}</p>
+              </div>
             </div>
           </div>
         </div>
 
         {/* 수입 목록 */}
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-            <p className="mt-4 text-gray-600">로딩 중...</p>
-          </div>
-        ) : incomes.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-md p-12 text-center">
-            <p className="text-gray-600 mb-4">등록된 수입이 없습니다.</p>
-            <Link
-              href="/dashboard/income/new"
-              className="text-green-600 hover:underline"
-            >
-              첫 수입을 추가해보세요
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {incomes.map((income) => (
-              <div
-                key={income.id}
-                className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition"
+        <div>
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent mx-auto mb-4"></div>
+              <p className="text-sm" style={{ color: '#8E8E93' }}>로딩 중...</p>
+            </div>
+          ) : incomes.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-sm mb-4" style={{ color: '#8E8E93' }}>등록된 수입이 없습니다.</p>
+              <Link
+                href="/dashboard/income/new"
+                className="text-sm text-accent hover:underline"
               >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="text-2xl font-bold text-green-600">{formatCurrency(income.amount)}</span>
+                첫 수입을 추가해보세요
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {groupedIncomesArray.map((group) => {
+                const categoryInfo = getCategoryInfo(group.incomes[0]?.source || '')
+                return (
+                  <div key={group.date}>
+                    {/* 날짜 헤더 */}
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="text-2xl font-bold" style={{ color: '#111111' }}>
+                        {getDayNumber(group.date)}
+                      </span>
+                      <span 
+                        className="px-2 py-1 rounded-md text-xs font-medium text-white"
+                        style={{ backgroundColor: '#339AF0' }}
+                      >
+                        {getDayOfWeek(group.date)}
+                      </span>
+                      <div className="flex-1 flex items-center justify-end gap-2">
+                        <span className="text-sm" style={{ color: '#339AF0' }}>
+                          {formatCurrency(group.total)}원
+                        </span>
+                        <span className="text-sm" style={{ color: '#FF3B30' }}>
+                          0원
+                        </span>
+                      </div>
                     </div>
-                    <p className="text-lg font-semibold mb-1">{income.source}</p>
-                    <p className="text-sm text-gray-600 mb-2">{formatDate(income.date)}</p>
+
+                    {/* 수입 항목 */}
+                    <div className="space-y-3">
+                      {group.incomes.map((income) => {
+                        const catInfo = getCategoryInfo(income.source)
+                        return (
+                          <Link
+                            key={income.id}
+                            href={`/dashboard/income/${income.id}/edit`}
+                            className="flex items-center gap-3 p-3 rounded-lg bg-surface hover:bg-bg transition"
+                          >
+                            <div className="text-2xl">{catInfo.icon || '💰'}</div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium mb-0.5" style={{ color: '#111111' }}>
+                                {income.source}
+                              </p>
+                              {income.memo && (
+                                <p className="text-xs truncate" style={{ color: '#8E8E93' }}>
+                                  {income.memo}
+                                </p>
+                              )}
+                            </div>
+                            <div className="text-right">
+                              <p className="text-base font-semibold" style={{ color: '#339AF0' }}>
+                                {formatCurrency(income.amount)}원
+                              </p>
+                            </div>
+                          </Link>
+                        )
+                      })}
+                    </div>
                   </div>
-                  <div className="flex gap-2 ml-4">
-                    <Link
-                      href={`/dashboard/income/${income.id}/edit`}
-                      className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
-                    >
-                      수정
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(income.id)}
-                      className="px-4 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition"
-                    >
-                      삭제
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+                )
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

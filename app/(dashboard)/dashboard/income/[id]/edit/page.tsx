@@ -21,6 +21,7 @@ export default function EditIncomePage() {
   const [formData, setFormData] = useState({
     amount: '',
     source: '',
+    memo: '',
     date: '',
   })
 
@@ -54,6 +55,7 @@ export default function EditIncomePage() {
       setFormData({
         amount: data.amount.toString(),
         source: data.source,
+        memo: data.memo || '',
         date: data.date,
       })
     } catch (err) {
@@ -78,11 +80,18 @@ export default function EditIncomePage() {
         return
       }
 
+      if (!formData.memo) {
+        setError('제목을 입력해주세요.')
+        setSaving(false)
+        return
+      }
+
       const { error: updateError } = await supabase
         .from('incomes')
         .update({
           amount: parseInt(formData.amount),
           source: formData.source,
+          memo: formData.memo,
           date: formData.date,
         })
         .eq('id', incomeId)
@@ -128,6 +137,21 @@ export default function EditIncomePage() {
 
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-8 space-y-6">
           <div>
+            <label htmlFor="memo" className="block text-sm font-medium text-gray-700 mb-2">
+              제목 <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="memo"
+              type="text"
+              value={formData.memo}
+              onChange={(e) => setFormData({ ...formData, memo: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              placeholder="예: 월급, 부수입, 용돈 등"
+              required
+            />
+          </div>
+
+          <div>
             <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">
               금액 <span className="text-red-500">*</span>
             </label>
@@ -138,6 +162,20 @@ export default function EditIncomePage() {
               onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               min="1"
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
+              날짜 <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="date"
+              type="date"
+              value={formData.date}
+              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               required
             />
           </div>
@@ -160,20 +198,6 @@ export default function EditIncomePage() {
                 <option key={source} value={source} />
               ))}
             </datalist>
-          </div>
-
-          <div>
-            <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
-              날짜 <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="date"
-              type="date"
-              value={formData.date}
-              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              required
-            />
           </div>
 
           {error && (
