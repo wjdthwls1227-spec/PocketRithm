@@ -204,55 +204,55 @@ export default function DashboardPage() {
         </div>
 
         {/* 빠른 액션 버튼 */}
-        <div className="mb-10">
-          <h2 className="text-lg font-semibold mb-2" style={{ color: '#111111', letterSpacing: '-0.3px' }}>빠른 시작</h2>
-          <p className="text-sm mb-7" style={{ color: '#8E8E93' }}>자주 사용하는 기능</p>
-          <div className="grid grid-cols-2 gap-4">
+        <div className="mb-6 md:mb-10">
+          <h2 className="text-base md:text-lg font-semibold mb-1 md:mb-2" style={{ color: '#111111', letterSpacing: '-0.3px' }}>빠른 시작</h2>
+          <p className="text-xs md:text-sm mb-4 md:mb-7" style={{ color: '#8E8E93' }}>자주 사용하는 기능</p>
+          <div className="grid grid-cols-2 gap-3 md:gap-4">
             <Link
               href="/dashboard/expenses/new"
-              className="card-toss p-7 flex flex-col items-center justify-center button-toss group relative overflow-hidden"
+              className="card-toss p-5 md:p-7 flex flex-col items-center justify-center button-toss group relative overflow-hidden"
               style={{ background: 'linear-gradient(135deg, #2864FF 0%, #1E4ED8 100%)', color: '#FFFFFF' }}
             >
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%)' }}></div>
-              <div className="icon-toss-accent mb-4 group-hover:scale-110 transition-transform duration-300 relative z-10" style={{ background: 'rgba(255, 255, 255, 0.25)', width: '64px', height: '64px', fontSize: '32px' }}>💰</div>
-              <p className="font-semibold text-sm relative z-10">지출 추가</p>
+              <div className="icon-toss-accent mb-3 md:mb-4 group-hover:scale-110 transition-transform duration-300 relative z-10" style={{ background: 'rgba(255, 255, 255, 0.25)', width: '48px', height: '48px', fontSize: '24px' }}>💰</div>
+              <p className="font-semibold text-xs md:text-sm relative z-10">지출 추가</p>
             </Link>
 
             <Link
               href="/dashboard/income/new"
-              className="card-toss p-7 flex flex-col items-center justify-center button-toss group"
+              className="card-toss p-5 md:p-7 flex flex-col items-center justify-center button-toss group"
             >
-              <div className="icon-toss mb-4 group-hover:scale-110 transition-transform duration-300" style={{ width: '64px', height: '64px', fontSize: '32px' }}>💵</div>
-              <p className="font-semibold text-sm" style={{ color: '#111111' }}>수입 추가</p>
+              <div className="icon-toss mb-3 md:mb-4 group-hover:scale-110 transition-transform duration-300" style={{ width: '48px', height: '48px', fontSize: '24px' }}>💵</div>
+              <p className="font-semibold text-xs md:text-sm" style={{ color: '#111111' }}>수입 추가</p>
             </Link>
 
             <Link
               href="/dashboard/expenses"
-              className="card-toss p-7 flex flex-col items-center justify-center button-toss group"
+              className="card-toss p-5 md:p-7 flex flex-col items-center justify-center button-toss group"
             >
-              <div className="icon-toss mb-4 group-hover:scale-110 transition-transform duration-300" style={{ width: '64px', height: '64px', fontSize: '32px' }}>📊</div>
-              <p className="font-semibold text-sm" style={{ color: '#111111' }}>가계부 보기</p>
+              <div className="icon-toss mb-3 md:mb-4 group-hover:scale-110 transition-transform duration-300" style={{ width: '48px', height: '48px', fontSize: '24px' }}>📊</div>
+              <p className="font-semibold text-xs md:text-sm" style={{ color: '#111111' }}>가계부 보기</p>
             </Link>
 
             <Link
               href="/dashboard/statistics"
-              className="card-toss p-7 flex flex-col items-center justify-center button-toss group"
+              className="card-toss p-5 md:p-7 flex flex-col items-center justify-center button-toss group"
             >
-              <div className="icon-toss mb-4 group-hover:scale-110 transition-transform duration-300" style={{ width: '64px', height: '64px', fontSize: '32px' }}>📈</div>
-              <p className="font-semibold text-sm" style={{ color: '#111111' }}>통계 보기</p>
+              <div className="icon-toss mb-3 md:mb-4 group-hover:scale-110 transition-transform duration-300" style={{ width: '48px', height: '48px', fontSize: '24px' }}>📈</div>
+              <p className="font-semibold text-xs md:text-sm" style={{ color: '#111111' }}>통계 보기</p>
             </Link>
           </div>
         </div>
 
         {/* 타입별 분석 */}
         {typeData.length > 0 ? (
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold mb-1" style={{ color: '#111111', letterSpacing: '-0.3px' }}>이번 달 지출 타입 분석</h2>
-            <p className="text-sm mb-6" style={{ color: '#8E8E93' }}>욕망·결핍·필요로 분류된 지출을 AI가 분석했습니다</p>
-            <div className="card-toss p-6">
-              <div className="flex flex-col md:flex-row items-center gap-10">
+          <div className="mb-6 md:mb-8">
+            <h2 className="text-base md:text-lg font-semibold mb-1" style={{ color: '#111111', letterSpacing: '-0.3px' }}>이번 달 지출 타입 분석</h2>
+            <p className="text-xs md:text-sm mb-4 md:mb-6" style={{ color: '#8E8E93' }}>욕망·결핍·필요로 분류된 지출을 AI가 분석했습니다</p>
+            <div className="card-toss p-4 md:p-6">
+              <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
                 <div className="w-full md:w-1/2 max-w-xs">
-                  <ResponsiveContainer width="100%" height={220}>
+                  <ResponsiveContainer width="100%" height={180}>
                     <PieChart>
                       <Pie
                         data={typeData}
@@ -260,7 +260,7 @@ export default function DashboardPage() {
                         cy="50%"
                         labelLine={false}
                         label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={75}
+                        outerRadius={60}
                         fill="#8884d8"
                         dataKey="value"
                         stroke="#FFFFFF"
@@ -285,16 +285,16 @@ export default function DashboardPage() {
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="w-full md:w-1/2 space-y-3">
+                <div className="w-full md:w-1/2 space-y-2 md:space-y-3">
                   {typeData.map((item) => (
-                    <div key={item.name} className="flex items-center justify-between p-5 rounded-2xl hover:bg-opacity-90 transition-all duration-200 group" style={{ background: '#F7F7F8' }}>
-                      <div className="flex items-center gap-4">
+                    <div key={item.name} className="flex items-center justify-between p-4 md:p-5 rounded-2xl hover:bg-opacity-90 transition-all duration-200 group" style={{ background: '#F7F7F8' }}>
+                      <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
                         <div 
-                          className="w-5 h-5 rounded-full shadow-md group-hover:scale-110 transition-transform" 
+                          className="w-4 h-4 md:w-5 md:h-5 rounded-full shadow-md group-hover:scale-110 transition-transform flex-shrink-0" 
                           style={{ backgroundColor: item.color }}
                         ></div>
-                        <div>
-                          <span className="font-semibold text-base block mb-1" style={{ color: '#111111' }}>{item.name}</span>
+                        <div className="min-w-0 flex-1">
+                          <span className="font-semibold text-sm md:text-base block mb-0.5 md:mb-1" style={{ color: '#111111' }}>{item.name}</span>
                           <span className="text-xs font-medium" style={{ color: '#8E8E93' }}>
                             {item.name === '욕망' && '순간적 충동으로 인한 지출'}
                             {item.name === '결핍' && '감정적 보상으로 인한 지출'}
@@ -302,20 +302,20 @@ export default function DashboardPage() {
                           </span>
                         </div>
                       </div>
-                      <span className="text-xl font-bold" style={{ color: '#111111', letterSpacing: '-0.5px' }}>{formatCurrency(item.value)}</span>
+                      <span className="text-base md:text-xl font-bold flex-shrink-0 ml-2" style={{ color: '#111111', letterSpacing: '-0.5px' }}>{formatCurrency(item.value)}</span>
                     </div>
                   ))}
                 </div>
               </div>
               
               {/* AI 인사이트 */}
-              <div className="mt-7 pt-7 border-t" style={{ borderColor: '#F0F0F0' }}>
-                <div className="flex items-start gap-4 p-5 rounded-2xl" style={{ background: 'linear-gradient(135deg, #F7F7F8 0%, #FFFFFF 100%)' }}>
-                  <div className="text-2xl flex-shrink-0">🤖</div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-3">
-                      <h4 className="font-semibold text-base" style={{ color: '#111111' }}>AI 인사이트</h4>
-                      <span className="px-2 py-0.5 rounded-md text-xs font-semibold" style={{ background: '#2864FF', color: '#FFFFFF' }}>NEW</span>
+              <div className="mt-5 md:mt-7 pt-5 md:pt-7 border-t" style={{ borderColor: '#F0F0F0' }}>
+                <div className="flex items-start gap-3 md:gap-4 p-4 md:p-5 rounded-2xl" style={{ background: 'linear-gradient(135deg, #F7F7F8 0%, #FFFFFF 100%)' }}>
+                  <div className="text-xl md:text-2xl flex-shrink-0">🤖</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2 md:mb-3">
+                      <h4 className="font-semibold text-sm md:text-base" style={{ color: '#111111' }}>AI 인사이트</h4>
+                      <span className="px-2 py-0.5 rounded-md text-xs font-semibold flex-shrink-0" style={{ background: '#2864FF', color: '#FFFFFF' }}>NEW</span>
                     </div>
                     {typeData.length > 0 && (() => {
                       const maxType = typeData.reduce((prev, current) => (prev.value > current.value) ? prev : current)
@@ -325,7 +325,7 @@ export default function DashboardPage() {
                         '필요': '이번 달 필요 지출이 가장 많습니다. 건강한 소비 패턴을 유지하고 있습니다.'
                       }
                       return (
-                        <p className="text-sm leading-relaxed" style={{ color: '#565656', lineHeight: '1.7' }}>
+                        <p className="text-xs md:text-sm leading-relaxed" style={{ color: '#565656', lineHeight: '1.7' }}>
                           {insights[maxType.name] || '지출 패턴을 분석하여 회고를 작성하면 더 나은 소비 습관을 만들 수 있습니다.'}
                         </p>
                       )
@@ -336,19 +336,19 @@ export default function DashboardPage() {
             </div>
           </div>
         ) : (
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold mb-1" style={{ color: '#111111', letterSpacing: '-0.3px' }}>지출 타입 분석</h2>
-            <p className="text-sm mb-6" style={{ color: '#8E8E93' }}>욕망·결핍·필요로 분류된 지출을 AI가 분석합니다</p>
-            <div className="card-toss p-8 text-center">
-              <div className="text-4xl mb-4">📊</div>
-              <p className="text-base font-medium mb-2" style={{ color: '#111111' }}>아직 지출 기록이 없습니다</p>
-              <p className="text-sm mb-6" style={{ color: '#8E8E93' }}>
-                지출을 기록하면 <strong>욕망·결핍·필요</strong>로 자동 분류되고<br />
-                AI가 소비 패턴을 분석해드립니다
+          <div className="mb-6 md:mb-8">
+            <h2 className="text-base md:text-lg font-semibold mb-1" style={{ color: '#111111', letterSpacing: '-0.3px' }}>지출 타입 분석</h2>
+            <p className="text-xs md:text-sm mb-4 md:mb-6" style={{ color: '#8E8E93' }}>욕망·결핍·필요로 분류된 지출을 AI가 분석합니다</p>
+            <div className="card-toss p-6 md:p-8 text-center">
+              <div className="text-3xl md:text-4xl mb-3 md:mb-4">📊</div>
+              <p className="text-sm md:text-base font-medium mb-2" style={{ color: '#111111' }}>아직 지출 기록이 없습니다</p>
+              <p className="text-xs md:text-sm mb-4 md:mb-6 px-2" style={{ color: '#8E8E93' }}>
+                지출을 기록하면 <strong>욕망·결핍·필요</strong>로 자동 분류되고<br className="hidden sm:block" />
+                <span className="sm:hidden"> </span>AI가 소비 패턴을 분석해드립니다
               </p>
               <Link
                 href="/dashboard/expenses/new"
-                className="inline-block px-6 py-3 rounded-2xl font-semibold text-sm transition-all"
+                className="inline-block px-5 py-2.5 md:px-6 md:py-3 rounded-2xl font-semibold text-xs md:text-sm transition-all"
                 style={{ background: '#2864FF', color: '#FFFFFF' }}
               >
                 첫 지출 기록하기
@@ -358,21 +358,21 @@ export default function DashboardPage() {
         )}
 
         {/* 회고 CTA */}
-        <div className="mb-10">
-          <div className="card-toss p-7" style={{ background: 'linear-gradient(135deg, #F7F7F8 0%, #FFFFFF 100%)', border: '2px solid #E6E6E7' }}>
-            <div className="flex items-center justify-between gap-6">
-              <div className="flex items-center gap-5">
-                <div className="text-4xl flex-shrink-0">📝</div>
-                <div>
-                  <h3 className="text-lg font-semibold mb-2" style={{ color: '#111111', letterSpacing: '-0.3px' }}>회고로 소비 습관 개선하기</h3>
-                  <p className="text-sm leading-relaxed" style={{ color: '#8E8E93', lineHeight: '1.6' }}>
+        <div className="mb-6 md:mb-10">
+          <div className="card-toss p-5 md:p-7" style={{ background: 'linear-gradient(135deg, #F7F7F8 0%, #FFFFFF 100%)', border: '2px solid #E6E6E7' }}>
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
+              <div className="flex items-start gap-3 md:gap-5 flex-1 min-w-0">
+                <div className="text-3xl md:text-4xl flex-shrink-0">📝</div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-base md:text-lg font-semibold mb-1 md:mb-2" style={{ color: '#111111', letterSpacing: '-0.3px' }}>회고로 소비 습관 개선하기</h3>
+                  <p className="text-xs md:text-sm leading-relaxed" style={{ color: '#8E8E93', lineHeight: '1.6' }}>
                     지출 패턴을 회고하고 다음 달 더 나은 소비 계획을 세워보세요
                   </p>
                 </div>
               </div>
               <Link
                 href="/dashboard/retrospectives"
-                className="px-6 py-3 rounded-2xl font-semibold text-sm transition-all button-toss flex-shrink-0"
+                className="px-5 py-2.5 md:px-6 md:py-3 rounded-2xl font-semibold text-xs md:text-sm transition-all button-toss flex-shrink-0 w-full md:w-auto text-center"
                 style={{ background: '#111111', color: '#FFFFFF' }}
               >
                 회고 작성하기
@@ -383,20 +383,20 @@ export default function DashboardPage() {
 
         {/* 추가 기능 링크 */}
         <div>
-          <h2 className="text-lg font-semibold mb-1" style={{ color: '#111111', letterSpacing: '-0.3px' }}>더 많은 기능</h2>
-          <p className="text-sm mb-6" style={{ color: '#8E8E93' }}>다양한 기능을 활용해보세요</p>
-          <div className="flex flex-wrap gap-3">
+          <h2 className="text-base md:text-lg font-semibold mb-1" style={{ color: '#111111', letterSpacing: '-0.3px' }}>더 많은 기능</h2>
+          <p className="text-xs md:text-sm mb-4 md:mb-6" style={{ color: '#8E8E93' }}>다양한 기능을 활용해보세요</p>
+          <div className="flex flex-wrap gap-2 md:gap-3">
             <Link
               href="/dashboard/challenges"
-              className="card-toss px-6 py-3.5 button-toss inline-flex items-center"
+              className="card-toss px-5 py-2.5 md:px-6 md:py-3.5 button-toss inline-flex items-center"
             >
-              <span className="font-semibold text-sm" style={{ color: '#111111' }}>챌린지</span>
+              <span className="font-semibold text-xs md:text-sm" style={{ color: '#111111' }}>챌린지</span>
             </Link>
             <Link
               href="/dashboard/articles"
-              className="card-toss px-6 py-3.5 button-toss inline-flex items-center"
+              className="card-toss px-5 py-2.5 md:px-6 md:py-3.5 button-toss inline-flex items-center"
             >
-              <span className="font-semibold text-sm" style={{ color: '#111111' }}>칼럼</span>
+              <span className="font-semibold text-xs md:text-sm" style={{ color: '#111111' }}>칼럼</span>
             </Link>
           </div>
         </div>

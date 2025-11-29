@@ -11,10 +11,12 @@ export default function DashboardNav() {
   const pathname = usePathname()
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const userMenuRef = useRef<HTMLDivElement>(null)
+  const mobileMenuRef = useRef<HTMLDivElement>(null)
 
   // 사용자 정보 로드
   useEffect(() => {
@@ -49,16 +51,19 @@ export default function DashboardNav() {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setIsUserMenuOpen(false)
       }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+        setIsMobileMenuOpen(false)
+      }
     }
 
-    if (isAccountMenuOpen || isUserMenuOpen) {
+    if (isAccountMenuOpen || isUserMenuOpen || isMobileMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside)
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [isAccountMenuOpen, isUserMenuOpen])
+  }, [isAccountMenuOpen, isUserMenuOpen, isMobileMenuOpen])
 
   const isActive = (path: string) => {
     if (path === '/dashboard') {
@@ -75,7 +80,8 @@ export default function DashboardNav() {
             <Link href="/dashboard" className="text-base md:text-lg font-semibold text-accent">
               포켓리즘
             </Link>
-            <div className="ml-4 md:ml-8 flex items-center gap-0.5 md:gap-1">
+            {/* 데스크톱 네비게이션 메뉴 */}
+            <div className="hidden md:flex ml-8 items-center gap-1">
               <Link
                 href="/dashboard"
                 className={`px-2 py-1.5 md:px-3 md:py-2 rounded-md text-xs md:text-sm font-medium transition ${
@@ -178,7 +184,7 @@ export default function DashboardNav() {
 
               <Link
                 href="/challenges"
-                className={`hidden sm:block px-2 py-1.5 md:px-3 md:py-2 rounded-md text-xs md:text-sm font-medium transition ${
+                className={`px-3 py-2 rounded-md text-sm font-medium transition ${
                   pathname === '/challenges'
                     ? 'bg-surface text-textPrimary'
                     : 'text-textSecondary hover:text-textPrimary'
@@ -189,7 +195,7 @@ export default function DashboardNav() {
 
               <Link
                 href="/articles"
-                className={`hidden sm:block px-2 py-1.5 md:px-3 md:py-2 rounded-md text-xs md:text-sm font-medium transition ${
+                className={`px-3 py-2 rounded-md text-sm font-medium transition ${
                   pathname === '/articles'
                     ? 'bg-surface text-textPrimary'
                     : 'text-textSecondary hover:text-textPrimary'
@@ -200,9 +206,209 @@ export default function DashboardNav() {
             </div>
           </div>
 
+          {/* 오른쪽 섹션: 모바일 햄버거 메뉴 + 데스크톱 사용자 프로필 */}
           <div className="flex items-center gap-2 md:gap-3">
-            {/* 사용자 프로필 드롭다운 */}
-            <div className="relative" ref={userMenuRef}>
+            {/* 모바일 햄버거 메뉴 버튼 */}
+            <div className="md:hidden relative" ref={mobileMenuRef}>
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="p-2 text-textSecondary hover:text-textPrimary transition"
+                aria-label="메뉴 열기"
+              >
+                {isMobileMenuOpen ? (
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  </svg>
+                )}
+              </button>
+
+              {/* 모바일 메뉴 드롭다운 */}
+              {isMobileMenuOpen && (
+                <div className="absolute top-full right-0 mt-2 w-56 bg-bg border border-border rounded-lg shadow-lg py-2 z-50">
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`block px-4 py-2 text-sm transition ${
+                      isActive('/dashboard') && pathname === '/dashboard'
+                        ? 'bg-surface text-textPrimary font-medium'
+                        : 'text-textSecondary hover:bg-surface'
+                    }`}
+                  >
+                    📊 대시보드
+                  </Link>
+                  <div className="border-t border-border my-1"></div>
+                  <div className="px-4 py-2 text-xs font-semibold text-textTertiary uppercase tracking-wider">
+                    가계부
+                  </div>
+                  <Link
+                    href="/dashboard/transactions"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`block px-4 py-2 text-sm transition ${
+                      isActive('/dashboard/transactions')
+                        ? 'bg-surface text-textPrimary font-medium'
+                        : 'text-textSecondary hover:bg-surface'
+                    }`}
+                  >
+                    거래 내역
+                  </Link>
+                  <Link
+                    href="/dashboard/expenses"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`block px-4 py-2 text-sm transition ${
+                      isActive('/dashboard/expenses')
+                        ? 'bg-surface text-textPrimary font-medium'
+                        : 'text-textSecondary hover:bg-surface'
+                    }`}
+                  >
+                    지출 관리
+                  </Link>
+                  <Link
+                    href="/dashboard/income"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`block px-4 py-2 text-sm transition ${
+                      isActive('/dashboard/income')
+                        ? 'bg-surface text-textPrimary font-medium'
+                        : 'text-textSecondary hover:bg-surface'
+                    }`}
+                  >
+                    수입 관리
+                  </Link>
+                  <div className="border-t border-border my-1"></div>
+                  <Link
+                    href="/dashboard/statistics"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`block px-4 py-2 text-sm transition ${
+                      isActive('/dashboard/statistics')
+                        ? 'bg-surface text-textPrimary font-medium'
+                        : 'text-textSecondary hover:bg-surface'
+                    }`}
+                  >
+                    📈 통계
+                  </Link>
+                  <Link
+                    href="/dashboard/retrospectives"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`block px-4 py-2 text-sm transition ${
+                      isActive('/dashboard/retrospectives')
+                        ? 'bg-surface text-textPrimary font-medium'
+                        : 'text-textSecondary hover:bg-surface'
+                    }`}
+                  >
+                    📝 회고
+                  </Link>
+                  <div className="border-t border-border my-1"></div>
+                  <Link
+                    href="/challenges"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`block px-4 py-2 text-sm transition ${
+                      pathname === '/challenges'
+                        ? 'bg-surface text-textPrimary font-medium'
+                        : 'text-textSecondary hover:bg-surface'
+                    }`}
+                  >
+                    🎯 챌린지
+                  </Link>
+                  <Link
+                    href="/articles"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`block px-4 py-2 text-sm transition ${
+                      pathname === '/articles'
+                        ? 'bg-surface text-textPrimary font-medium'
+                        : 'text-textSecondary hover:bg-surface'
+                    }`}
+                  >
+                    📰 칼럼
+                  </Link>
+                  <div className="border-t border-border my-1"></div>
+                  <div className="px-4 py-2 text-xs font-semibold text-textTertiary uppercase tracking-wider">
+                    계정
+                  </div>
+                  <Link
+                    href="/dashboard/profile"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false)
+                      setIsUserMenuOpen(false)
+                    }}
+                    className={`block px-4 py-2 text-sm transition ${
+                      pathname === '/dashboard/profile'
+                        ? 'bg-surface text-textPrimary font-medium'
+                        : 'text-textSecondary hover:bg-surface'
+                    }`}
+                  >
+                    👤 마이페이지
+                  </Link>
+                  <Link
+                    href="/dashboard/settings"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false)
+                      setIsUserMenuOpen(false)
+                    }}
+                    className={`block px-4 py-2 text-sm transition ${
+                      pathname === '/dashboard/settings'
+                        ? 'bg-surface text-textPrimary font-medium'
+                        : 'text-textSecondary hover:bg-surface'
+                    }`}
+                  >
+                    ⚙️ 설정
+                  </Link>
+                  {isAdmin(user?.email) && (
+                    <Link
+                      href="/dashboard/admin"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false)
+                        setIsUserMenuOpen(false)
+                      }}
+                      className={`block px-4 py-2 text-sm transition ${
+                        pathname === '/dashboard/admin'
+                          ? 'bg-surface text-textPrimary font-medium'
+                          : 'text-textSecondary hover:bg-surface'
+                      }`}
+                    >
+                      🔧 어드민
+                    </Link>
+                  )}
+                  <div className="border-t border-border my-1"></div>
+                  <form action={signOut}>
+                    <button
+                      type="submit"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="w-full text-left px-4 py-2 text-sm text-textSecondary hover:bg-surface transition"
+                    >
+                      🚪 로그아웃
+                    </button>
+                  </form>
+                </div>
+              )}
+            </div>
+
+            {/* 데스크톱 사용자 프로필 */}
+            <div className="hidden md:flex items-center">
+              {/* 사용자 프로필 드롭다운 */}
+              <div className="relative" ref={userMenuRef}>
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium text-textSecondary hover:text-textPrimary transition"
@@ -278,6 +484,7 @@ export default function DashboardNav() {
                   </form>
                 </div>
               )}
+              </div>
             </div>
           </div>
         </div>

@@ -15,7 +15,7 @@ export default function TermsPage() {
               <section>
                 <h2 className="text-lg font-semibold mb-3" style={{ color: '#111111' }}>제1조 (목적)</h2>
                 <p>
-                  본 약관은 포켓리즘(PocketRism, 이하 &quot;회사&quot;)이 제공하는 서비스의 이용과 관련하여 회사와 이용자 간의 권리, 의무 및 책임사항, 기타 필요한 사항을 규정함을 목적으로 합니다.
+                  본 약관은 포켓리즘(PocketRithm, 이하 &quot;회사&quot;)이 제공하는 서비스의 이용과 관련하여 회사와 이용자 간의 권리, 의무 및 책임사항, 기타 필요한 사항을 규정함을 목적으로 합니다.
                 </p>
               </section>
 

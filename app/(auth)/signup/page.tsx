@@ -144,17 +144,17 @@ export default function SignupPage() {
   return (
     <>
       <HomeNav />
-      <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-gray-50">
+      <main className="flex min-h-screen flex-col items-center justify-center px-4 py-8 md:p-24 bg-gray-50">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">회원가입</h1>
-          <p className="text-gray-600">
+        <div className="text-center mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold mb-2">회원가입</h1>
+          <p className="text-sm md:text-base text-gray-600">
             포켓리즘과 함께 소비 습관을 개선해보세요
           </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-8">
-          <form onSubmit={handleSignup} className="space-y-6">
+        <div className="bg-white rounded-lg shadow-md p-6 md:p-8">
+          <form onSubmit={handleSignup} className="space-y-5 md:space-y-6">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                 이름
@@ -164,7 +164,7 @@ export default function SignupPage() {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
                 placeholder="홍길동"
                 required
               />
@@ -179,7 +179,7 @@ export default function SignupPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
                 placeholder="example@email.com"
                 required
               />
@@ -194,7 +194,7 @@ export default function SignupPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
                 placeholder="최소 6자 이상"
                 minLength={6}
                 required
@@ -315,7 +315,7 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3.5 md:py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed text-base md:text-sm"
             >
               {loading ? '처리 중...' : '회원가입'}
             </button>
