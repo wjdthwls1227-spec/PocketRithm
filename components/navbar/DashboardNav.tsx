@@ -392,15 +392,15 @@ export default function DashboardNav() {
                     </Link>
                   )}
                   <div className="border-t border-border my-1"></div>
-                  <form action={signOut}>
-                    <button
-                      type="submit"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="w-full text-left px-4 py-2 text-sm text-textSecondary hover:bg-surface transition"
-                    >
-                      🚪 로그아웃
-                    </button>
-                  </form>
+                  <button
+                    onClick={async () => {
+                      setIsMobileMenuOpen(false)
+                      await signOut()
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-textSecondary hover:bg-surface transition"
+                  >
+                    🚪 로그아웃
+                  </button>
                 </div>
               )}
             </div>
@@ -474,14 +474,15 @@ export default function DashboardNav() {
                     </Link>
                   )}
                   <div className="border-t border-border my-1"></div>
-                  <form action={signOut}>
-                    <button
-                      type="submit"
-                      className="w-full text-left px-4 py-2 text-sm text-textSecondary hover:bg-surface transition"
-                    >
-                      🚪 로그아웃
-                    </button>
-                  </form>
+                  <button
+                    onClick={async () => {
+                      setIsUserMenuOpen(false)
+                      await signOut()
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-textSecondary hover:bg-surface transition"
+                  >
+                    🚪 로그아웃
+                  </button>
                 </div>
               )}
               </div>

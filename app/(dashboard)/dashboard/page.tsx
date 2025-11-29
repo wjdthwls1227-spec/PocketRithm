@@ -121,7 +121,7 @@ export default function DashboardPage() {
           </p>
           
           {/* 후킹 메시지 카드 */}
-          <div className="card-toss p-4 md:p-7 mb-6 md:mb-8 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #2864FF 0%, #1E4ED8 100%)', color: '#FFFFFF' }}>
+          <div className="hidden md:block card-toss p-4 md:p-7 mb-6 md:mb-8 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #2864FF 0%, #1E4ED8 100%)', color: '#FFFFFF' }}>
             <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-10" style={{ background: 'rgba(255, 255, 255, 0.3)', transform: 'translate(20%, -20%)' }}></div>
             <div className="relative z-10">
               <div className="flex items-start gap-3 md:gap-5">
