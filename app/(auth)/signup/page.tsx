@@ -218,7 +218,7 @@ export default function SignupPage() {
                     {error.includes('이메일 발송') && (
                       <p className="text-xs text-red-600 mt-2">
                         💡 탈퇴 후 재가입하신 경우, 이메일 발송에 시간이 걸릴 수 있습니다. 
-                        잠시 후 "이메일 다시 보내기"를 시도해주세요.
+                        잠시 후 &quot;이메일 다시 보내기&quot;를 시도해주세요.
                       </p>
                     )}
                   </div>
@@ -245,16 +245,16 @@ export default function SignupPage() {
                       </p>
                       <p className="text-xs" style={{ color: '#78350F', lineHeight: '1.6' }}>
                         이메일 발송에 <strong>1-2분 정도 걸릴 수 있습니다</strong>. 
-                        이메일이 오지 않으면 아래 <strong>"이메일 다시 보내기"</strong> 버튼을 클릭해주세요.
+                        이메일이 오지 않으면 아래 <strong>&quot;이메일 다시 보내기&quot;</strong> 버튼을 클릭해주세요.
                       </p>
                     </div>
                     <div className="bg-white p-4 rounded-lg border border-blue-100 mb-4">
                       <p className="text-xs font-medium mb-2" style={{ color: '#1E3A8A' }}>📌 확인 사항</p>
                       <ul className="text-xs space-y-1" style={{ color: '#1E3A8A' }}>
                         <li>• 받은편지함과 스팸 폴더를 확인해주세요</li>
-                        <li>• 이메일의 "이메일 확인하기" 버튼을 클릭해주세요</li>
+                        <li>• 이메일의 &quot;이메일 확인하기&quot; 버튼을 클릭해주세요</li>
                         <li>• 인증 후 자동으로 로그인됩니다</li>
-                        <li>• 이메일이 오지 않으면 아래 "이메일 다시 보내기" 버튼을 클릭해주세요</li>
+                        <li>• 이메일이 오지 않으면 아래 &quot;이메일 다시 보내기&quot; 버튼을 클릭해주세요</li>
                       </ul>
                     </div>
                     <div className="flex gap-2">

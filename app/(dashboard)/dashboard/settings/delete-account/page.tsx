@@ -138,7 +138,7 @@ export default function DeleteAccountPage() {
 
             <div className="p-5 rounded-xl mb-6" style={{ background: '#FEF2F2', border: '1px solid #FEE2E2' }}>
               <p className="text-sm font-medium mb-3" style={{ color: '#991B1B' }}>
-                계정 삭제를 확인하려면 아래에 <strong>"탈퇴하겠습니다"</strong>를 입력해주세요.
+                계정 삭제를 확인하려면 아래에 <strong>&quot;탈퇴하겠습니다&quot;</strong>를 입력해주세요.
               </p>
               <input
                 type="text"
