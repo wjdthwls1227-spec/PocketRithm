@@ -91,8 +91,15 @@ export default function NewIncomePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.amount || !formData.source || !formData.memo) {
+    // 빈 문자열 체크 포함
+    if (!formData.amount || formData.amount.trim() === '' || !formData.source || formData.source.trim() === '' || !formData.memo || formData.memo.trim() === '') {
       setError('금액, 수입원, 제목을 입력해주세요.')
+      return
+    }
+
+    const amount = parseInt(formData.amount.replace(/,/g, ''))
+    if (isNaN(amount) || amount <= 0) {
+      setError('올바른 금액을 입력해주세요.')
       return
     }
 
@@ -108,24 +115,33 @@ export default function NewIncomePage() {
         return
       }
 
+      const insertData: any = {
+        user_id: user.id,
+        amount: amount,
+        source: formData.source.trim(),
+        date: formData.date,
+      }
+
+      // memo 컬럼이 있을 때만 추가
+      const memoValue = formData.memo.trim()
+      if (memoValue) {
+        insertData.memo = memoValue
+      }
+
       const { error: insertError } = await supabase
         .from('incomes')
-        .insert({
-          user_id: user.id,
-          amount: parseInt(formData.amount),
-          source: formData.source,
-          memo: formData.memo || null,
-          date: formData.date,
-        })
+        .insert(insertData)
 
       if (insertError) {
-        setError(insertError.message)
+        console.error('수입 추가 오류:', insertError)
+        setError(insertError.message || '수입 추가 중 오류가 발생했습니다.')
         setLoading(false)
         return
       }
 
       router.push('/dashboard/income')
     } catch (err) {
+      console.error('수입 추가 오류:', err)
       setError(err instanceof Error ? err.message : '수입 추가 중 오류가 발생했습니다.')
       setLoading(false)
     }
@@ -138,8 +154,8 @@ export default function NewIncomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg">
-      <div className="max-w-md mx-auto">
+    <div className="min-h-screen bg-bg overflow-x-hidden">
+      <div className="max-w-md mx-auto w-full">
         {/* 헤더 */}
         <div className="sticky top-0 bg-bg border-b border-border px-4 py-3 z-10">
           <div className="flex items-center justify-between">
@@ -162,7 +178,7 @@ export default function NewIncomePage() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-4 py-6 space-y-6">
+        <form onSubmit={handleSubmit} className="px-4 py-6 space-y-6 w-full max-w-full">
           {/* 제목 입력 */}
           <div>
             <label className="block text-sm font-medium mb-2" style={{ color: '#565656' }}>
@@ -208,7 +224,8 @@ export default function NewIncomePage() {
               type="date"
               value={formData.date}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-              className="w-full px-4 py-3 border border-border rounded-input bg-surface"
+              className="w-full max-w-full px-4 py-3 border border-border rounded-input bg-surface text-sm"
+              style={{ fontSize: '16px' }}
             />
           </div>
 
@@ -259,6 +276,17 @@ export default function NewIncomePage() {
                 </Link>
               </div>
             )}
+          </div>
+
+          {/* 저장 버튼 */}
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={loading || !formData.amount || !formData.source || !formData.memo}
+              className="w-full py-4 bg-accent text-white rounded-button font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition"
+            >
+              {loading ? '저장 중...' : '저장'}
+            </button>
           </div>
 
           {error && (

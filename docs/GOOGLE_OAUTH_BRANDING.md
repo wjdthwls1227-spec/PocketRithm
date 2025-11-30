@@ -36,13 +36,14 @@ Google 로그인 화면에 표시되는 서비스 이름을 변경하려면 Goog
      - 로고를 추가하면 더 전문적으로 보입니다
 
 3. **앱 도메인** (선택사항)
-   - **앱 홈페이지**: `https://pocket-rithm.vercel.app` (또는 실제 도메인)
-   - **개인정보처리방침 링크**: `https://pocket-rithm.vercel.app/privacy`
-   - **서비스 약관 링크**: `https://pocket-rithm.vercel.app/terms`
+   - **앱 홈페이지**: `https://www.pocketrithm.kr` (또는 실제 도메인)
+   - **개인정보처리방침 링크**: `https://www.pocketrithm.kr/privacy`
+   - **서비스 약관 링크**: `https://www.pocketrithm.kr/terms`
 
 4. **승인된 도메인** (자동 추가됨)
    - OAuth 클라이언트 ID에 등록한 도메인은 자동으로 추가됩니다
-   - `pocket-rithm.vercel.app`
+   - `www.pocketrithm.kr`
+   - `pocketrithm.kr`
    - `kxoydaogtvkmjpoztnid.supabase.co`
 
 ### 3단계: 범위(Scopes) 설정

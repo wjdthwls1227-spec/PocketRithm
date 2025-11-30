@@ -9,6 +9,8 @@ CREATE TABLE public.profiles (
   plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'pro', 'challenge')),
   monthly_budget INTEGER,
   preferences JSONB DEFAULT '{"dailyReminder": false, "weeklyReminder": true, "monthlyReminder": true}'::jsonb,
+  signup_source TEXT,
+  signup_reason TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -22,6 +24,7 @@ CREATE TABLE public.expenses (
   type TEXT NOT NULL CHECK (type IN ('desire', 'lack', 'need')),
   emotions TEXT[] DEFAULT '{}',
   reason TEXT,
+  analysis TEXT,
   date DATE NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -52,6 +55,29 @@ CREATE TABLE public.user_categories (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(user_id, name, type)
+);
+
+-- Monthly Budgets 테이블
+CREATE TABLE public.monthly_budgets (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  month TEXT NOT NULL, -- YYYY-MM 형식 (예: "2024-11")
+  total_budget INTEGER NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, month)
+);
+
+-- Category Monthly Budgets 테이블
+CREATE TABLE public.category_monthly_budgets (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  category_id UUID REFERENCES public.user_categories(id) ON DELETE CASCADE NOT NULL,
+  month TEXT NOT NULL, -- YYYY-MM 형식
+  budget INTEGER NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, category_id, month)
 );
 
 -- Daily Logs 테이블
@@ -187,6 +213,8 @@ CREATE INDEX idx_challenge_participants_user_id ON public.challenge_participants
 CREATE INDEX idx_challenge_participants_challenge_id ON public.challenge_participants(challenge_id);
 CREATE INDEX idx_user_categories_user_id ON public.user_categories(user_id);
 CREATE INDEX idx_user_categories_type ON public.user_categories(type);
+CREATE INDEX idx_monthly_budgets_user_month ON public.monthly_budgets(user_id, month);
+CREATE INDEX idx_category_monthly_budgets_user_month ON public.category_monthly_budgets(user_id, month);
 
 -- RLS (Row Level Security) 활성화
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
@@ -200,6 +228,8 @@ ALTER TABLE public.monthly_reflections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.scheduled_reflections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.challenge_participants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.monthly_budgets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.category_monthly_budgets ENABLE ROW LEVEL SECURITY;
 
 -- RLS 정책 (기본: 사용자는 자신의 데이터만 접근 가능)
 CREATE POLICY "Users can view own profile" ON public.profiles
@@ -248,6 +278,32 @@ CREATE POLICY "Users can update own categories" ON public.user_categories
   FOR UPDATE USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can delete own categories" ON public.user_categories
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Monthly Budgets RLS
+CREATE POLICY "Users can view own monthly budgets" ON public.monthly_budgets
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own monthly budgets" ON public.monthly_budgets
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own monthly budgets" ON public.monthly_budgets
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own monthly budgets" ON public.monthly_budgets
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Category Monthly Budgets RLS
+CREATE POLICY "Users can view own category monthly budgets" ON public.category_monthly_budgets
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own category monthly budgets" ON public.category_monthly_budgets
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own category monthly budgets" ON public.category_monthly_budgets
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own category monthly budgets" ON public.category_monthly_budgets
   FOR DELETE USING (auth.uid() = user_id);
 
 -- Daily Logs RLS
@@ -333,5 +389,11 @@ CREATE TRIGGER update_articles_updated_at BEFORE UPDATE ON public.articles
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 CREATE TRIGGER update_user_categories_updated_at BEFORE UPDATE ON public.user_categories
+  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+CREATE TRIGGER update_monthly_budgets_updated_at BEFORE UPDATE ON public.monthly_budgets
+  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+CREATE TRIGGER update_category_monthly_budgets_updated_at BEFORE UPDATE ON public.category_monthly_budgets
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 

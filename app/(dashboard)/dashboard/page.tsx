@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency } from '@/lib/utils'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
+import { getCurrentMonth, getMonthlyBudget, getCurrentMonthIncome } from '@/lib/budget'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -13,8 +14,13 @@ export default function DashboardPage() {
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [todayTotal, setTodayTotal] = useState(0)
+  const [yesterdayTotal, setYesterdayTotal] = useState(0)
   const [monthTotal, setMonthTotal] = useState(0)
+  const [lastMonthTotal, setLastMonthTotal] = useState(0)
   const [typeData, setTypeData] = useState<{ name: string; value: number; color: string }[]>([])
+  const [budget, setBudget] = useState(0)
+  const [currentMonthIncome, setCurrentMonthIncome] = useState(0)
+  const [isCustomBudget, setIsCustomBudget] = useState(false)
 
   useEffect(() => {
     async function loadData() {
@@ -29,16 +35,33 @@ export default function DashboardPage() {
 
         setUser(currentUser)
 
+        // 로컬 시간 기준으로 날짜 계산 (타임존 문제 방지)
+        const formatDate = (date: Date): string => {
+          const year = date.getFullYear()
+          const month = String(date.getMonth() + 1).padStart(2, '0')
+          const day = String(date.getDate()).padStart(2, '0')
+          return `${year}-${month}-${day}`
+        }
+
         // 오늘 날짜
-        const today = new Date().toISOString().split('T')[0]
+        const today = formatDate(new Date())
+        
+        // 어제 날짜
+        const yesterday = new Date()
+        yesterday.setDate(yesterday.getDate() - 1)
+        const yesterdayDate = formatDate(yesterday)
         
         // 이번 달 첫날과 마지막날
         const now = new Date()
-        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
-        const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0]
+        const firstDayOfMonth = formatDate(new Date(now.getFullYear(), now.getMonth(), 1))
+        const lastDayOfMonth = formatDate(new Date(now.getFullYear(), now.getMonth() + 1, 0))
+
+        // 지난달 첫날과 마지막날
+        const firstDayOfLastMonth = formatDate(new Date(now.getFullYear(), now.getMonth() - 1, 1))
+        const lastDayOfLastMonth = formatDate(new Date(now.getFullYear(), now.getMonth(), 0))
 
         // 모든 데이터를 병렬로 로드
-        const [profileResult, todayExpensesResult, monthExpensesResult] = await Promise.all([
+        const [profileResult, todayExpensesResult, yesterdayExpensesResult, monthExpensesResult, lastMonthExpensesResult] = await Promise.all([
           supabase
             .from('profiles')
             .select('*')
@@ -51,16 +74,42 @@ export default function DashboardPage() {
             .eq('date', today),
           supabase
             .from('expenses')
+            .select('amount')
+            .eq('user_id', currentUser.id)
+            .eq('date', yesterdayDate),
+          supabase
+            .from('expenses')
             .select('amount, type')
             .eq('user_id', currentUser.id)
             .gte('date', firstDayOfMonth)
-            .lte('date', lastDayOfMonth)
+            .lte('date', lastDayOfMonth),
+          supabase
+            .from('expenses')
+            .select('amount')
+            .eq('user_id', currentUser.id)
+            .gte('date', firstDayOfLastMonth)
+            .lte('date', lastDayOfLastMonth)
         ])
 
         setProfile(profileResult.data)
 
         const todaySum = todayExpensesResult.data?.reduce((sum, e) => sum + e.amount, 0) || 0
+        const yesterdaySum = yesterdayExpensesResult.data?.reduce((sum, e) => sum + e.amount, 0) || 0
         const monthSum = monthExpensesResult.data?.reduce((sum, e) => sum + e.amount, 0) || 0
+        const lastMonthSum = lastMonthExpensesResult.data?.reduce((sum, e) => sum + e.amount, 0) || 0
+
+        // 현재 월 예산과 수입을 병렬로 조회
+        const currentMonth = getCurrentMonth()
+        const defaultBudget = profileResult.data?.monthly_budget || 0
+        
+        const [monthlyBudget, income] = await Promise.all([
+          getMonthlyBudget(supabase, currentUser.id, currentMonth, defaultBudget),
+          getCurrentMonthIncome(supabase, currentUser.id)
+        ])
+        
+        setBudget(monthlyBudget)
+        setIsCustomBudget(monthlyBudget !== defaultBudget)
+        setCurrentMonthIncome(income)
 
         // 타입별 집계
         const typeMap: Record<string, number> = { desire: 0, lack: 0, need: 0 }
@@ -77,7 +126,9 @@ export default function DashboardPage() {
         ].filter(item => item.value > 0) // 값이 0인 항목 제외
 
         setTodayTotal(todaySum)
+        setYesterdayTotal(yesterdaySum)
         setMonthTotal(monthSum)
+        setLastMonthTotal(lastMonthSum)
         setTypeData(typeChartData)
       } catch (err) {
         console.error('데이터 로드 오류:', err)
@@ -89,8 +140,8 @@ export default function DashboardPage() {
     loadData()
   }, [router])
 
-  const budget = profile?.monthly_budget || 0
   const budgetUsage = budget > 0 ? Math.round((monthTotal / budget) * 100) : 0
+  const budgetToIncomeRatio = currentMonthIncome > 0 ? Math.round((budget / currentMonthIncome) * 100) : 0
 
   if (loading || !user) {
     return (
@@ -103,8 +154,19 @@ export default function DashboardPage() {
     )
   }
 
-  // 이전 달 대비 변화율 계산 (간단한 예시)
-  const previousMonthChange = 0 // TODO: 실제 데이터로 계산
+  // 어제 대비 변화율 계산
+  const yesterdayChange = yesterdayTotal > 0 
+    ? Math.round(((todayTotal - yesterdayTotal) / yesterdayTotal) * 100)
+    : todayTotal > 0 ? 100 : 0 // 어제가 0원이고 오늘이 있으면 100% 증가
+  const isTodayIncrease = todayTotal > yesterdayTotal
+  const isTodayDecrease = todayTotal < yesterdayTotal
+
+  // 지난달 대비 변화율 계산
+  const previousMonthChange = lastMonthTotal > 0 
+    ? Math.round(((monthTotal - lastMonthTotal) / lastMonthTotal) * 100)
+    : monthTotal > 0 ? 100 : 0 // 지난달이 0원이고 이번 달이 있으면 100% 증가
+  const isIncrease = monthTotal > lastMonthTotal
+  const isDecrease = monthTotal < lastMonthTotal
 
   return (
     <main className="min-h-screen" style={{ background: '#F7F7F8' }}>
@@ -153,50 +215,96 @@ export default function DashboardPage() {
         <div className="mb-6 md:mb-10">
           <div className="stat-card p-4 md:p-7">
             <div className="grid grid-cols-3 gap-2 md:gap-8">
-              <div className="text-center">
+              <div className="text-center flex flex-col">
                 <p className="text-xs mb-2 md:mb-4 font-semibold uppercase tracking-wider" style={{ color: '#8E8E93', letterSpacing: '0.5px' }}>오늘 지출</p>
-                <p className="text-xl md:text-3xl font-bold mb-1 md:mb-2" style={{ color: '#111111', letterSpacing: '-0.8px' }}>
+                <p className="text-base sm:text-lg md:text-2xl lg:text-3xl font-bold mb-1 md:mb-2" style={{ color: '#111111', letterSpacing: '-0.8px' }}>
                   {formatCurrency(todayTotal)}
                 </p>
-                {todayTotal > 0 && (
-                  <p className="text-xs font-medium" style={{ color: '#8E8E93' }}>어제 대비</p>
-                )}
+                <div className="mt-auto">
+                  {(yesterdayTotal > 0 || todayTotal > 0) ? (
+                    <div className="flex flex-col items-center gap-0.5">
+                      <p className="text-xs font-medium" style={{ color: '#8E8E93' }}>어제 대비</p>
+                      <p 
+                        className="text-xs font-semibold"
+                        style={{ 
+                          color: isTodayIncrease ? '#FF3B30' : isTodayDecrease ? '#34C759' : '#8E8E93'
+                        }}
+                      >
+                        {isTodayIncrease ? '↑' : isTodayDecrease ? '↓' : '→'} {Math.abs(yesterdayChange)}%
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-xs font-medium" style={{ color: '#8E8E93' }}>어제 대비</p>
+                  )}
+                </div>
               </div>
               
-              <div className="text-center border-l border-r" style={{ borderColor: '#F0F0F0' }}>
+              <div className="text-center border-l border-r flex flex-col" style={{ borderColor: '#F0F0F0' }}>
                 <p className="text-xs mb-2 md:mb-4 font-semibold uppercase tracking-wider" style={{ color: '#8E8E93', letterSpacing: '0.5px' }}>이번 달</p>
-                <p className="text-xl md:text-3xl font-bold mb-1 md:mb-2" style={{ color: '#111111', letterSpacing: '-0.8px' }}>
+                <p className="text-base sm:text-lg md:text-2xl lg:text-3xl font-bold mb-1 md:mb-2" style={{ color: '#111111', letterSpacing: '-0.8px' }}>
                   {formatCurrency(monthTotal)}
                 </p>
-                <p className="text-xs font-medium" style={{ color: '#8E8E93' }}>지난달 대비</p>
+                <div className="mt-auto">
+                  {lastMonthTotal > 0 || monthTotal > 0 ? (
+                    <div className="flex flex-col items-center gap-0.5">
+                      <p className="text-xs font-medium" style={{ color: '#8E8E93' }}>지난달 대비</p>
+                      <p 
+                        className="text-xs font-semibold"
+                        style={{ 
+                          color: isIncrease ? '#FF3B30' : isDecrease ? '#34C759' : '#8E8E93'
+                        }}
+                      >
+                        {isIncrease ? '↑' : isDecrease ? '↓' : '→'} {Math.abs(previousMonthChange)}%
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-xs font-medium" style={{ color: '#8E8E93' }}>지난달 대비</p>
+                  )}
+                </div>
               </div>
               
-              <div className="text-center">
+              <Link href="/dashboard/settings" className="text-center block hover:opacity-80 transition cursor-pointer flex flex-col">
                 <p className="text-xs mb-2 md:mb-4 font-semibold uppercase tracking-wider" style={{ color: '#8E8E93', letterSpacing: '0.5px' }}>월 예산</p>
-                <p className="text-xl md:text-3xl font-bold mb-2 md:mb-4" style={{ color: '#111111', letterSpacing: '-0.8px' }}>
+                <p className="text-base sm:text-lg md:text-2xl lg:text-3xl font-bold mb-1 md:mb-2" style={{ color: '#111111', letterSpacing: '-0.8px' }}>
                   {budget > 0 ? formatCurrency(budget) : '미설정'}
                 </p>
-                {budget > 0 && (
-                  <div>
-                    <div className="w-full rounded-full h-2.5 mb-2.5" style={{ background: '#F0F0F0' }}>
-                      <div
-                        className="h-2.5 rounded-full transition-all duration-700 ease-out"
-                        style={{ 
-                          width: `${Math.min(budgetUsage, 100)}%`,
-                          background: budgetUsage >= 100
-                            ? 'linear-gradient(90deg, #FF6B6B 0%, #FF8787 100%)'
-                            : budgetUsage >= 80
-                            ? 'linear-gradient(90deg, #FFD43B 0%, #FFE066 100%)'
-                            : 'linear-gradient(90deg, #4C6EF5 0%, #6B8AFF 100%)'
-                        }}
-                      ></div>
-                    </div>
-                    <p className="text-xs font-semibold" style={{ color: budgetUsage >= 100 ? '#FF6B6B' : budgetUsage >= 80 ? '#FFD43B' : '#4C6EF5' }}>
-                      {budgetUsage}% 사용
-                    </p>
-                  </div>
+                {isCustomBudget && (
+                  <p className="text-xs font-medium mb-1" style={{ color: '#8E8E93' }}>
+                    이번 달 전용
+                  </p>
                 )}
-              </div>
+                <div className="mt-auto">
+                  {budget > 0 ? (
+                    <div>
+                      <div className="w-full rounded-full h-2.5 mb-2" style={{ background: '#F0F0F0' }}>
+                        <div
+                          className="h-2.5 rounded-full transition-all duration-700 ease-out"
+                          style={{ 
+                            width: `${Math.min(budgetUsage, 100)}%`,
+                            background: budgetUsage >= 100
+                              ? 'linear-gradient(90deg, #FF6B6B 0%, #FF8787 100%)'
+                              : budgetUsage >= 80
+                              ? 'linear-gradient(90deg, #FFD43B 0%, #FFE066 100%)'
+                              : 'linear-gradient(90deg, #4C6EF5 0%, #6B8AFF 100%)'
+                          }}
+                        ></div>
+                      </div>
+                      <p className="text-xs font-semibold mb-1" style={{ color: budgetUsage >= 100 ? '#FF6B6B' : budgetUsage >= 80 ? '#FFD43B' : '#4C6EF5' }}>
+                        {budgetUsage}% 사용
+                      </p>
+                      {currentMonthIncome > 0 && (
+                        <p className="text-xs font-medium" style={{ color: '#8E8E93' }}>
+                          수입 대비 {budgetToIncomeRatio}%
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs font-medium" style={{ color: '#8E8E93' }}>
+                      클릭하여 설정
+                    </p>
+                  )}
+                </div>
+              </Link>
             </div>
           </div>
         </div>

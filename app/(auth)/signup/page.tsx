@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { validatePassword } from '@/lib/security'
 import HomeNav from '@/components/navbar/HomeNav'
 
 export default function SignupPage() {
@@ -11,6 +12,9 @@ export default function SignupPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
+  const [signupSource, setSignupSource] = useState('')
+  const [signupSourceOther, setSignupSourceOther] = useState('')
+  const [signupReason, setSignupReason] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -20,6 +24,14 @@ export default function SignupPage() {
     setLoading(true)
     setError(null)
     setMessage(null)
+
+    // 비밀번호 검증
+    const passwordError = validatePassword(password)
+    if (passwordError) {
+      setError(passwordError)
+      setLoading(false)
+      return
+    }
 
     try {
       const supabase = createClient()
@@ -98,6 +110,22 @@ export default function SignupPage() {
       }
 
       if (data.user) {
+        // 가입 경로와 가입 이유 저장
+        const finalSignupSource = signupSource === 'other' ? signupSourceOther : signupSource
+        if (finalSignupSource || signupReason) {
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({
+              signup_source: finalSignupSource || null,
+              signup_reason: signupReason || null,
+            })
+            .eq('id', data.user.id)
+
+          if (updateError) {
+            console.error('프로필 업데이트 오류:', updateError)
+          }
+        }
+
         // 이메일이 이미 확인된 경우 (재가입 시)
         if (data.user.email_confirmed_at) {
           // 이미 인증된 경우 바로 로그인 처리
@@ -130,6 +158,10 @@ export default function SignupPage() {
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            prompt: 'consent',
+            access_type: 'offline',
+          },
         },
       })
 
@@ -195,9 +227,54 @@ export default function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
-                placeholder="최소 6자 이상"
-                minLength={6}
+                placeholder="최소 8자, 대소문자, 숫자, 특수문자 포함"
+                minLength={8}
                 required
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                비밀번호는 최소 8자 이상이며, 대문자, 소문자, 숫자, 특수문자를 포함해야 합니다.
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="signupSource" className="block text-sm font-medium text-gray-700 mb-2">
+                가입 경로 <span className="text-gray-400 font-normal">(선택사항)</span>
+              </label>
+              <select
+                id="signupSource"
+                value={signupSource}
+                onChange={(e) => setSignupSource(e.target.value)}
+                className="w-full px-4 py-3 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base bg-white"
+              >
+                <option value="">선택해주세요</option>
+                <option value="search">검색엔진 (구글, 네이버 등)</option>
+                <option value="sns">SNS (인스타그램, 페이스북, 트위터 등)</option>
+                <option value="recommendation">지인 추천</option>
+                <option value="ad">광고</option>
+                <option value="other">기타</option>
+              </select>
+              {signupSource === 'other' && (
+                <input
+                  type="text"
+                  value={signupSourceOther}
+                  onChange={(e) => setSignupSourceOther(e.target.value)}
+                  className="w-full mt-2 px-4 py-3 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+                  placeholder="가입 경로를 입력해주세요"
+                />
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="signupReason" className="block text-sm font-medium text-gray-700 mb-2">
+                가입 이유 <span className="text-gray-400 font-normal">(선택사항)</span>
+              </label>
+              <textarea
+                id="signupReason"
+                value={signupReason}
+                onChange={(e) => setSignupReason(e.target.value)}
+                className="w-full px-4 py-3 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base resize-none"
+                placeholder="포켓리즘을 알게 된 계기나 가입 이유를 자유롭게 적어주세요"
+                rows={3}
               />
             </div>
 
@@ -321,8 +398,7 @@ export default function SignupPage() {
             </button>
           </form>
 
-          {/* 구글 회원가입 - 도메인 구매 및 앱 안정화 후 재활성화 예정 */}
-          {/* 
+          {/* 구글 회원가입 */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300"></div>
@@ -356,7 +432,6 @@ export default function SignupPage() {
             </svg>
             <span style={{ color: '#111111' }}>구글로 시작하기</span>
           </button>
-          */}
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">

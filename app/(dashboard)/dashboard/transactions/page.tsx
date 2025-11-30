@@ -100,55 +100,95 @@ export default function TransactionsPage() {
 
       if (!user) return
 
-      // 지출 로드
+      // 지출과 수입 쿼리 준비
       let expenseQuery = supabase
         .from('expenses')
-        .select('*')
+        .select('id, amount, category, type, reason, date, created_at')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false })
+        .order('created_at', { ascending: false })
+
+      let incomeQuery = supabase
+        .from('incomes')
+        .select('id, amount, source, memo, date, created_at')
         .eq('user_id', user.id)
         .order('date', { ascending: false })
         .order('created_at', { ascending: false })
 
       if (dateRange.start) {
         expenseQuery = expenseQuery.gte('date', dateRange.start)
-      }
-      if (dateRange.end) {
-        expenseQuery = expenseQuery.lte('date', dateRange.end)
-      }
-
-      const { data: expenseData, error: expenseError } = await expenseQuery
-
-      if (expenseError) {
-        console.error('지출 로드 오류:', expenseError)
-      } else {
-        setExpenses(expenseData || [])
-      }
-
-      // 수입 로드
-      let incomeQuery = supabase
-        .from('incomes')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('date', { ascending: false })
-        .order('created_at', { ascending: false })
-
-      if (dateRange.start) {
         incomeQuery = incomeQuery.gte('date', dateRange.start)
       }
       if (dateRange.end) {
+        expenseQuery = expenseQuery.lte('date', dateRange.end)
         incomeQuery = incomeQuery.lte('date', dateRange.end)
       }
 
-      const { data: incomeData, error: incomeError } = await incomeQuery
+      // 병렬로 실행
+      const [expenseResult, incomeResult] = await Promise.all([
+        expenseQuery,
+        incomeQuery
+      ])
 
-      if (incomeError) {
-        console.error('수입 로드 오류:', incomeError)
+      if (expenseResult.error) {
+        console.error('지출 로드 오류:', expenseResult.error)
       } else {
-        setIncomes(incomeData || [])
+        setExpenses(expenseResult.data || [])
+      }
+
+      if (incomeResult.error) {
+        console.error('수입 로드 오류:', incomeResult.error)
+      } else {
+        setIncomes(incomeResult.data || [])
       }
     } catch (err) {
       console.error('거래 내역 로드 오류:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDeleteExpense = async (id: string) => {
+    if (!confirm('정말 삭제하시겠습니까?')) return
+
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('expenses')
+        .delete()
+        .eq('id', id)
+
+      if (error) {
+        console.error('삭제 오류:', error)
+        alert('삭제 중 오류가 발생했습니다.')
+        return
+      }
+
+      loadTransactions()
+    } catch (err) {
+      console.error('삭제 오류:', err)
+    }
+  }
+
+  const handleDeleteIncome = async (id: string) => {
+    if (!confirm('정말 삭제하시겠습니까?')) return
+
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('incomes')
+        .delete()
+        .eq('id', id)
+
+      if (error) {
+        console.error('삭제 오류:', error)
+        alert('삭제 중 오류가 발생했습니다.')
+        return
+      }
+
+      loadTransactions()
+    } catch (err) {
+      console.error('삭제 오류:', err)
     }
   }
 
@@ -161,8 +201,11 @@ export default function TransactionsPage() {
     return days[new Date(date).getDay()]
   }
 
-  const getDayNumber = (date: string) => {
-    return new Date(date).getDate().toString()
+  const getMonthAndDay = (date: string) => {
+    const d = new Date(date)
+    const month = d.getMonth() + 1
+    const day = d.getDate()
+    return `${month}월 ${day}일`
   }
 
   const getCategoryInfo = (categoryName: string, type: 'expense' | 'income') => {
@@ -263,27 +306,27 @@ export default function TransactionsPage() {
         </div>
 
         {/* 필터 섹션 */}
-        <div className="bg-surface rounded-lg border border-border p-4 md:p-6 mb-4 md:mb-6">
+        <div className="bg-surface rounded-lg border border-border p-4 md:p-6 mb-4 md:mb-6 overflow-x-hidden">
           <h2 className="text-base md:text-lg font-semibold mb-3 md:mb-4" style={{ color: '#111111' }}>필터</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 w-full">
+            <div className="flex flex-col">
               <label className="block text-sm font-medium mb-2" style={{ color: '#565656' }}>
                 기간
               </label>
-              <div className="flex gap-2">
+              <div className="flex gap-2 w-full">
                 <input
                   type="date"
                   value={dateRange.start}
                   onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                  className="flex-1 px-4 py-2 border border-border rounded-input bg-bg focus:ring-2 focus:ring-accent focus:border-transparent"
-                  style={{ color: '#111111' }}
+                  className="flex-1 h-10 min-w-0 px-2 md:px-4 py-2 border border-border rounded-input bg-bg focus:ring-2 focus:ring-accent focus:border-transparent text-sm"
+                  style={{ color: '#111111', fontSize: '16px' }}
                 />
                 <input
                   type="date"
                   value={dateRange.end}
                   onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                  className="flex-1 px-4 py-2 border border-border rounded-input bg-bg focus:ring-2 focus:ring-accent focus:border-transparent"
-                  style={{ color: '#111111' }}
+                  className="flex-1 h-10 min-w-0 px-2 md:px-4 py-2 border border-border rounded-input bg-bg focus:ring-2 focus:ring-accent focus:border-transparent text-sm"
+                  style={{ color: '#111111', fontSize: '16px' }}
                 />
               </div>
             </div>
@@ -300,7 +343,7 @@ export default function TransactionsPage() {
               </div>
               <div>
                 <p className="text-xs md:text-sm mb-1" style={{ color: '#8E8E93' }}>지출</p>
-                <p className="text-lg md:text-2xl font-bold" style={{ color: '#FF3B30' }}>{formatCurrency(totalExpense)}</p>
+                <p className="text-lg md:text-2xl font-bold" style={{ color: '#C92A2A' }}>{formatCurrency(totalExpense)}</p>
               </div>
               <div>
                 <p className="text-xs md:text-sm mb-1" style={{ color: '#8E8E93' }}>합계</p>
@@ -345,7 +388,7 @@ export default function TransactionsPage() {
                   {/* 날짜 헤더 */}
                   <div className="flex items-center gap-2 md:gap-3 mb-3">
                     <span className="text-xl md:text-2xl font-bold" style={{ color: '#111111' }}>
-                      {getDayNumber(group.date)}
+                      {getMonthAndDay(group.date)}
                     </span>
                     <span 
                       className="px-1.5 py-0.5 md:px-2 md:py-1 rounded-md text-xs font-medium text-white"
@@ -354,10 +397,10 @@ export default function TransactionsPage() {
                       {getDayOfWeek(group.date)}
                     </span>
                     <div className="flex-1 flex items-center justify-end gap-1 md:gap-2">
-                      <span className="text-xs md:text-sm" style={{ color: '#339AF0' }}>
+                      <span className="text-xs md:text-sm font-semibold" style={{ color: '#339AF0' }}>
                         {formatCurrency(group.incomeTotal)}원
                       </span>
-                      <span className="text-xs md:text-sm" style={{ color: '#FF3B30' }}>
+                      <span className="text-xs md:text-sm font-semibold" style={{ color: '#C92A2A' }}>
                         {formatCurrency(group.expenseTotal)}원
                       </span>
                     </div>
@@ -370,41 +413,63 @@ export default function TransactionsPage() {
                       const isExpense = transaction.type === 'expense'
                       
                       return (
-                        <Link
+                        <div
                           key={`${transaction.type}-${transaction.id}`}
-                          href={`/dashboard/${transaction.type === 'expense' ? 'expenses' : 'income'}/${transaction.id}/edit`}
-                          className="flex items-center gap-2 md:gap-3 p-2.5 md:p-3 rounded-lg bg-surface hover:bg-bg transition"
+                          className="flex items-center gap-2 md:gap-3 p-2.5 md:p-3 rounded-lg bg-surface hover:bg-bg transition group"
                         >
-                          <div className="text-xl md:text-2xl flex-shrink-0">{catInfo.icon || (isExpense ? '📦' : '💰')}</div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 flex-wrap">
-                              <p className="text-xs md:text-sm font-medium" style={{ color: '#111111' }}>
-                                {transaction.category}
-                              </p>
-                              {isExpense && transaction.expenseType && (
-                                <span 
-                                  className="px-1 py-0.5 md:px-1.5 md:py-0.5 rounded text-xs font-medium text-white flex-shrink-0"
-                                  style={{ backgroundColor: getTypeColor(transaction.expenseType) }}
-                                >
-                                  {getTypeLabel(transaction.expenseType)}
-                                </span>
+                          <Link
+                            href={`/dashboard/${transaction.type === 'expense' ? 'expenses' : 'income'}/${transaction.id}/edit`}
+                            className="flex items-center gap-2 md:gap-3 flex-1 min-w-0"
+                          >
+                            <div className="text-xl md:text-2xl flex-shrink-0">{catInfo.icon || (isExpense ? '📦' : '💰')}</div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 flex-wrap">
+                                <p className="text-xs md:text-sm font-medium" style={{ color: '#111111' }}>
+                                  {transaction.category}
+                                </p>
+                                {isExpense && transaction.expenseType && (
+                                  <span 
+                                    className="px-1 py-0.5 md:px-1.5 md:py-0.5 rounded text-xs font-medium text-white flex-shrink-0"
+                                    style={{ backgroundColor: getTypeColor(transaction.expenseType) }}
+                                  >
+                                    {getTypeLabel(transaction.expenseType)}
+                                  </span>
+                                )}
+                              </div>
+                              {transaction.title && (
+                                <p className="text-xs truncate" style={{ color: '#8E8E93' }}>
+                                  {transaction.title}
+                                </p>
                               )}
                             </div>
-                            {transaction.title && (
-                              <p className="text-xs truncate" style={{ color: '#8E8E93' }}>
-                                {transaction.title}
+                            <div className="text-right flex-shrink-0">
+                              <p 
+                                className="text-sm md:text-base font-semibold" 
+                                style={{ color: isExpense ? '#C92A2A' : '#339AF0' }}
+                              >
+                                {isExpense ? '-' : '+'}{formatCurrency(transaction.amount)}원
                               </p>
-                            )}
-                          </div>
-                          <div className="text-right flex-shrink-0">
-                            <p 
-                              className="text-sm md:text-base font-semibold" 
-                              style={{ color: isExpense ? '#FF3B30' : '#339AF0' }}
-                            >
-                              {isExpense ? '-' : '+'}{formatCurrency(transaction.amount)}원
-                            </p>
-                          </div>
-                        </Link>
+                            </div>
+                          </Link>
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              if (isExpense) {
+                                handleDeleteExpense(transaction.id)
+                              } else {
+                                handleDeleteIncome(transaction.id)
+                              }
+                            }}
+                            className="ml-2 p-1.5 md:p-2 rounded-lg hover:bg-red-50 transition opacity-70 md:opacity-0 md:group-hover:opacity-100 flex-shrink-0"
+                            style={{ color: '#FF3B30' }}
+                            title="삭제"
+                          >
+                            <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
                       )
                     })}
                   </div>

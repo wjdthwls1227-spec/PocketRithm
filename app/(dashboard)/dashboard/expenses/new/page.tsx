@@ -172,8 +172,8 @@ export default function NewExpensePage() {
   const selectedCategory = categories.find(c => c.name === formData.category)
 
   return (
-    <div className="min-h-screen bg-bg">
-      <div className="max-w-md mx-auto">
+    <div className="min-h-screen bg-bg overflow-x-hidden">
+      <div className="max-w-md mx-auto w-full">
         {/* 헤더 */}
         <div className="sticky top-0 bg-bg border-b border-border px-4 py-3 z-10">
           <div className="flex items-center justify-between">
@@ -196,7 +196,7 @@ export default function NewExpensePage() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-4 py-6 space-y-6">
+        <form onSubmit={handleSubmit} className="px-4 py-6 space-y-6 w-full max-w-full">
           {/* 제목 입력 */}
           <div>
             <label className="block text-sm font-medium mb-2" style={{ color: '#565656' }}>
@@ -242,7 +242,8 @@ export default function NewExpensePage() {
               type="date"
               value={formData.date}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-              className="w-full px-4 py-3 border border-border rounded-input bg-surface"
+              className="w-full max-w-full px-4 py-3 border border-border rounded-input bg-surface text-sm"
+              style={{ fontSize: '16px' }}
             />
           </div>
 

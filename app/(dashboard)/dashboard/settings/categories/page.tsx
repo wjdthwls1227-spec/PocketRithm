@@ -38,6 +38,22 @@ const defaultIncomeCategories = [
   { name: '기타', icon: '📦', color: '#868E96' },
 ]
 
+// 색상 팔레트 (객관식 선택용)
+const colorPalette = [
+  '#FF6B6B', // 빨강
+  '#FF6B9D', // 핑크
+  '#FFD43B', // 노랑
+  '#51CF66', // 초록
+  '#20C997', // 청록
+  '#339AF0', // 파랑
+  '#4C6EF5', // 인디고
+  '#845EF7', // 보라
+  '#E64980', // 마젠타
+  '#FD7E14', // 주황
+  '#8B4513', // 갈색
+  '#868E96', // 회색
+]
+
 export default function CategoriesPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
@@ -51,10 +67,18 @@ export default function CategoriesPage() {
   const [newCategoryName, setNewCategoryName] = useState('')
   const [newCategoryIcon, setNewCategoryIcon] = useState('📦')
   const [newCategoryColor, setNewCategoryColor] = useState('#868E96')
+  const [localCategories, setLocalCategories] = useState<Category[]>([])
+  const [hasOrderChanges, setHasOrderChanges] = useState(false)
 
   useEffect(() => {
     loadCategories()
   }, [])
+
+  useEffect(() => {
+    const currentCategories = activeTab === 'expense' ? expenseCategories : incomeCategories
+    setLocalCategories([...currentCategories].sort((a, b) => a.order_index - b.order_index))
+    setHasOrderChanges(false)
+  }, [activeTab, expenseCategories, incomeCategories])
 
   const loadCategories = async () => {
     try {
@@ -81,6 +105,13 @@ export default function CategoriesPage() {
       const categories = data || []
       setExpenseCategories(categories.filter(c => c.type === 'expense'))
       setIncomeCategories(categories.filter(c => c.type === 'income'))
+      
+      // 현재 탭에 맞는 카테고리로 로컬 state 업데이트
+      const currentTabCategories = activeTab === 'expense' 
+        ? categories.filter(c => c.type === 'expense')
+        : categories.filter(c => c.type === 'income')
+      setLocalCategories(currentTabCategories.sort((a, b) => a.order_index - b.order_index))
+      setHasOrderChanges(false)
     } catch (err) {
       console.error('카테고리 로드 오류:', err)
     } finally {
@@ -243,6 +274,60 @@ export default function CategoriesPage() {
     }
   }
 
+  const handleMoveCategory = (category: Category, direction: 'up' | 'down') => {
+    const sortedCategories = [...localCategories]
+    const currentIndex = sortedCategories.findIndex(c => c.id === category.id)
+
+    if (direction === 'up' && currentIndex === 0) return
+    if (direction === 'down' && currentIndex === sortedCategories.length - 1) return
+
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
+    
+    // 배열에서 두 요소의 위치를 교환
+    const temp = sortedCategories[currentIndex]
+    sortedCategories[currentIndex] = sortedCategories[targetIndex]
+    sortedCategories[targetIndex] = temp
+
+    setLocalCategories(sortedCategories)
+    setHasOrderChanges(true)
+  }
+
+  const handleSaveOrder = async () => {
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) return
+
+      // 새로운 order_index로 업데이트
+      const updates = localCategories.map((category, index) => ({
+        id: category.id,
+        order_index: index,
+      }))
+
+      // 모든 카테고리의 order_index를 한 번에 업데이트
+      for (const update of updates) {
+        const { error } = await supabase
+          .from('user_categories')
+          .update({ order_index: update.order_index })
+          .eq('id', update.id)
+
+        if (error) {
+          console.error('카테고리 순서 저장 오류:', error)
+          alert('카테고리 순서 저장 중 오류가 발생했습니다.')
+          return
+        }
+      }
+
+      setHasOrderChanges(false)
+      loadCategories()
+      alert('순서가 저장되었습니다.')
+    } catch (err) {
+      console.error('카테고리 순서 저장 오류:', err)
+      alert('카테고리 순서 저장 중 오류가 발생했습니다.')
+    }
+  }
+
   const currentCategories = activeTab === 'expense' ? expenseCategories : incomeCategories
   const hasCategories = currentCategories.length > 0
 
@@ -258,8 +343,8 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="p-4 md:p-8 overflow-x-hidden">
+      <div className="max-w-4xl mx-auto w-full">
         <div className="mb-6">
           <Link
             href="/dashboard/settings"
@@ -318,108 +403,159 @@ export default function CategoriesPage() {
 
         {/* 카테고리 목록 */}
         <div className="card-toss p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4" style={{ color: '#111111' }}>
-            {activeTab === 'expense' ? '지출' : '수입'} 카테고리
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold" style={{ color: '#111111' }}>
+              {activeTab === 'expense' ? '지출' : '수입'} 카테고리
+            </h2>
+            {hasOrderChanges && (
+              <button
+                onClick={handleSaveOrder}
+                className="px-4 py-2 bg-accent text-white rounded-button text-sm font-semibold hover:opacity-90 transition"
+              >
+                순서 저장
+              </button>
+            )}
+          </div>
           {hasCategories ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {currentCategories.map((category) => (
-                <div
-                  key={category.id}
-                  className="p-4 rounded-xl border border-border hover:shadow-sm transition"
-                  style={{ background: category.color ? `${category.color}15` : '#F7F7F8' }}
-                >
-                  {editingCategory?.id === category.id ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <input
-                          type="text"
-                          value={editingIcon}
-                          onChange={(e) => setEditingIcon(e.target.value)}
-                          className="w-12 px-2 py-1 text-lg border border-border rounded text-center"
-                          placeholder="📦"
-                          maxLength={2}
-                        />
-                        <div className="flex gap-1">
-                          <button
-                            onClick={handleUpdateCategory}
-                            className="text-xs px-2 py-1 bg-accent text-white rounded hover:opacity-90"
-                          >
-                            저장
-                          </button>
-                          <button
-                            onClick={handleCancelEdit}
-                            className="text-xs px-2 py-1 bg-surface border border-border rounded hover:bg-bg"
-                          >
-                            취소
-                          </button>
-                        </div>
-                      </div>
-                      <input
-                        type="text"
-                        value={editingName}
-                        onChange={(e) => setEditingName(e.target.value)}
-                        className="w-full px-2 py-1 text-sm border border-border rounded"
-                        placeholder="카테고리 이름"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            handleUpdateCategory()
-                          } else if (e.key === 'Escape') {
-                            handleCancelEdit()
-                          }
-                        }}
-                        autoFocus
-                      />
-                      <div className="flex items-center gap-2">
-                        <label className="text-xs" style={{ color: '#565656' }}>색상:</label>
-                        <input
-                          type="color"
-                          value={editingColor}
-                          onChange={(e) => setEditingColor(e.target.value)}
-                          className="w-8 h-8 border border-border rounded cursor-pointer"
-                        />
-                        <input
-                          type="text"
-                          value={editingColor}
-                          onChange={(e) => setEditingColor(e.target.value)}
-                          className="flex-1 px-2 py-1 text-xs border border-border rounded"
-                          placeholder="#868E96"
-                        />
-                      </div>
+            <div className="space-y-3">
+              {localCategories.map((category, index) => {
+                const canMoveUp = index > 0
+                const canMoveDown = index < localCategories.length - 1
+                
+                return (
+                  <div
+                    key={category.id}
+                    className="p-4 rounded-xl border border-border hover:shadow-sm transition flex items-center gap-3"
+                    style={{ background: category.color ? `${category.color}15` : '#F7F7F8' }}
+                  >
+                    {/* 순서 변경 버튼 */}
+                    <div className="flex flex-col gap-1 flex-shrink-0">
+                      <button
+                        onClick={() => handleMoveCategory(category, 'up')}
+                        disabled={!canMoveUp}
+                        className="px-2 py-1 text-xs bg-surface border border-border rounded hover:bg-bg transition disabled:opacity-30 disabled:cursor-not-allowed"
+                        title="위로 이동"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        onClick={() => handleMoveCategory(category, 'down')}
+                        disabled={!canMoveDown}
+                        className="px-2 py-1 text-xs bg-surface border border-border rounded hover:bg-bg transition disabled:opacity-30 disabled:cursor-not-allowed"
+                        title="아래로 이동"
+                      >
+                        ↓
+                      </button>
                     </div>
-                  ) : (
-                    <>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-2xl">{category.icon || '📦'}</span>
-                        <div className="flex gap-1">
-                          <button
-                            onClick={() => handleStartEdit(category)}
-                            className="text-xs px-2 py-1 text-textSecondary hover:text-accent hover:bg-surface rounded transition"
-                            title="수정"
-                          >
-                            ✏️
-                          </button>
-                          <button
-                            onClick={() => handleDeleteCategory(category)}
-                            className="text-xs px-2 py-1 text-textSecondary hover:text-red-500 hover:bg-surface rounded transition"
-                            title="삭제"
-                          >
-                            🗑️
-                          </button>
+
+                    <div className="flex-1 min-w-0">
+                      {editingCategory?.id === category.id ? (
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <input
+                              type="text"
+                              value={editingIcon}
+                              onChange={(e) => setEditingIcon(e.target.value)}
+                              className="w-12 px-2 py-1 text-lg border border-border rounded text-center"
+                              placeholder="📦"
+                              maxLength={2}
+                            />
+                            <div className="flex gap-1">
+                              <button
+                                onClick={handleUpdateCategory}
+                                className="text-xs px-2 py-1 bg-accent text-white rounded hover:opacity-90"
+                              >
+                                저장
+                              </button>
+                              <button
+                                onClick={handleCancelEdit}
+                                className="text-xs px-2 py-1 bg-surface border border-border rounded hover:bg-bg"
+                              >
+                                취소
+                              </button>
+                            </div>
+                          </div>
+                          <input
+                            type="text"
+                            value={editingName}
+                            onChange={(e) => setEditingName(e.target.value)}
+                            className="w-full px-2 py-1 text-sm border border-border rounded"
+                            placeholder="카테고리 이름"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                handleUpdateCategory()
+                              } else if (e.key === 'Escape') {
+                                handleCancelEdit()
+                              }
+                            }}
+                            autoFocus
+                          />
+                          <div>
+                            <label className="text-xs block mb-2" style={{ color: '#565656' }}>색상:</label>
+                            <div className="grid grid-cols-6 gap-2 mb-2">
+                              {colorPalette.map((color) => (
+                                <button
+                                  key={color}
+                                  type="button"
+                                  onClick={() => setEditingColor(color)}
+                                  className={`w-full aspect-square rounded-lg border-2 transition-all ${
+                                    editingColor === color
+                                      ? 'border-accent scale-110 shadow-md'
+                                      : 'border-border hover:border-accent/50'
+                                  }`}
+                                  style={{ backgroundColor: color }}
+                                  title={color}
+                                />
+                              ))}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-6 h-6 rounded border border-border flex-shrink-0"
+                                style={{ backgroundColor: editingColor }}
+                              />
+                              <span className="text-xs font-mono" style={{ color: '#8E8E93' }}>
+                                {editingColor}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      <p className="text-sm font-medium" style={{ color: '#111111' }}>
-                        {category.name}
-                      </p>
-                      {category.is_default && (
-                        <p className="text-xs mt-1" style={{ color: '#8E8E93' }}>
-                          기본 카테고리
-                        </p>
+                      ) : (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl">{category.icon || '📦'}</span>
+                            <div>
+                              <p className="text-sm font-medium" style={{ color: '#111111' }}>
+                                {category.name}
+                              </p>
+                              {category.is_default && (
+                                <p className="text-xs mt-0.5" style={{ color: '#8E8E93' }}>
+                                  기본 카테고리
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => handleStartEdit(category)}
+                              className="text-xs px-2 py-1 text-textSecondary hover:text-accent hover:bg-surface rounded transition"
+                              title="수정"
+                            >
+                              ✏️
+                            </button>
+                            <button
+                              onClick={() => handleDeleteCategory(category)}
+                              className="text-xs px-2 py-1 text-textSecondary hover:text-red-500 hover:bg-surface rounded transition"
+                              title="삭제"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </div>
                       )}
-                    </>
-                  )}
-                </div>
-              ))}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           ) : (
             <p className="text-sm text-center py-8" style={{ color: '#8E8E93' }}>
@@ -451,7 +587,7 @@ export default function CategoriesPage() {
                 }}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: '#565656' }}>
                   아이콘 (이모지)
@@ -460,7 +596,7 @@ export default function CategoriesPage() {
                   type="text"
                   value={newCategoryIcon}
                   onChange={(e) => setNewCategoryIcon(e.target.value)}
-                  className="w-full px-4 py-2 border border-border rounded-input text-center text-lg"
+                  className="w-full max-w-full px-4 py-2 border border-border rounded-input text-center text-lg"
                   placeholder="📦"
                   maxLength={2}
                 />
@@ -469,20 +605,30 @@ export default function CategoriesPage() {
                 <label className="block text-sm font-medium mb-2" style={{ color: '#565656' }}>
                   색상
                 </label>
-                <div className="flex gap-2">
-                  <input
-                    type="color"
-                    value={newCategoryColor}
-                    onChange={(e) => setNewCategoryColor(e.target.value)}
-                    className="w-12 h-12 border border-border rounded cursor-pointer"
+                <div className="grid grid-cols-6 gap-2">
+                  {colorPalette.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setNewCategoryColor(color)}
+                      className={`w-full aspect-square rounded-lg border-2 transition-all ${
+                        newCategoryColor === color
+                          ? 'border-accent scale-110 shadow-md'
+                          : 'border-border hover:border-accent/50'
+                      }`}
+                      style={{ backgroundColor: color }}
+                      title={color}
+                    />
+                  ))}
+                </div>
+                <div className="mt-2 flex items-center gap-2">
+                  <div
+                    className="w-8 h-8 rounded border border-border flex-shrink-0"
+                    style={{ backgroundColor: newCategoryColor }}
                   />
-                  <input
-                    type="text"
-                    value={newCategoryColor}
-                    onChange={(e) => setNewCategoryColor(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-border rounded-input text-sm"
-                    placeholder="#868E96"
-                  />
+                  <span className="text-xs font-mono" style={{ color: '#8E8E93' }}>
+                    {newCategoryColor}
+                  </span>
                 </div>
               </div>
             </div>

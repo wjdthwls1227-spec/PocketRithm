@@ -80,20 +80,20 @@ export default function EditIncomePage() {
         return
       }
 
-      if (!formData.memo) {
-        setError('제목을 입력해주세요.')
-        setSaving(false)
-        return
+      const updateData: any = {
+        amount: parseInt(formData.amount),
+        source: formData.source,
+        date: formData.date,
+      }
+
+      // memo 컬럼이 있을 때만 추가
+      if (formData.memo && formData.memo.trim()) {
+        updateData.memo = formData.memo.trim()
       }
 
       const { error: updateError } = await supabase
         .from('incomes')
-        .update({
-          amount: parseInt(formData.amount),
-          source: formData.source,
-          memo: formData.memo,
-          date: formData.date,
-        })
+        .update(updateData)
         .eq('id', incomeId)
         .eq('user_id', user.id)
 

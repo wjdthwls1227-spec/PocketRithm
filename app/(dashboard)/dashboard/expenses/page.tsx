@@ -22,6 +22,7 @@ const emotions = ['행복', '스트레스', '외로움', '지루함', '축하', 
 
 export default function ExpensesPage() {
   const [expenses, setExpenses] = useState<Expense[]>([])
+  const [incomes, setIncomes] = useState<any[]>([])
   const [categories, setCategories] = useState<Map<string, Category>>(new Map())
   const [loading, setLoading] = useState(true)
   const [filterType, setFilterType] = useState<'all' | 'desire' | 'lack' | 'need'>('all')
@@ -29,24 +30,46 @@ export default function ExpensesPage() {
   const [dateRange, setDateRange] = useState({ start: '', end: '' })
 
   useEffect(() => {
-    loadCategories()
-  }, [])
-
-  useEffect(() => {
-    loadExpenses()
-  }, [filterType, filterEmotion, dateRange])
-
-  const loadCategories = async () => {
-    try {
+    const loadAll = async () => {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       
       if (!user) return
 
+      // 카테고리, 지출, 수입을 병렬로 로드
+      await Promise.all([
+        loadCategories(supabase, user.id),
+        loadExpenses(supabase, user.id),
+        loadIncomes(supabase, user.id)
+      ])
+    }
+    
+    loadAll()
+  }, [])
+
+  useEffect(() => {
+    const loadData = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) return
+
+      // 지출과 수입을 병렬로 로드
+      await Promise.all([
+        loadExpenses(supabase, user.id),
+        loadIncomes(supabase, user.id)
+      ])
+    }
+    
+    loadData()
+  }, [filterType, filterEmotion, dateRange])
+
+  const loadCategories = async (supabase: any, userId: string) => {
+    try {
       const { data, error } = await supabase
         .from('user_categories')
-        .select('*')
-        .eq('user_id', user.id)
+        .select('id, name, icon, color')
+        .eq('user_id', userId)
         .eq('type', 'expense')
 
       if (error) {
@@ -69,18 +92,14 @@ export default function ExpensesPage() {
     }
   }
 
-  const loadExpenses = async () => {
+  const loadExpenses = async (supabase: any, userId: string) => {
     try {
       setLoading(true)
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-
-      if (!user) return
 
       let query = supabase
         .from('expenses')
-        .select('*')
-        .eq('user_id', user.id)
+        .select('id, amount, category, type, emotions, reason, date, created_at')
+        .eq('user_id', userId)
         .order('date', { ascending: false })
         .order('created_at', { ascending: false })
 
@@ -115,11 +134,43 @@ export default function ExpensesPage() {
     }
   }
 
+  const loadIncomes = async (supabase: any, userId: string) => {
+    try {
+      let query = supabase
+        .from('incomes')
+        .select('id, amount, source, memo, date')
+        .eq('user_id', userId)
+
+      if (dateRange.start) {
+        query = query.gte('date', dateRange.start)
+      }
+
+      if (dateRange.end) {
+        query = query.lte('date', dateRange.end)
+      }
+
+      const { data, error } = await query
+
+      if (error) {
+        console.error('수입 로드 오류:', error)
+        return
+      }
+
+      setIncomes(data || [])
+    } catch (err) {
+      console.error('수입 로드 오류:', err)
+    }
+  }
+
   const handleDelete = async (id: string) => {
     if (!confirm('정말 삭제하시겠습니까?')) return
 
     try {
       const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) return
+
       const { error } = await supabase
         .from('expenses')
         .delete()
@@ -131,7 +182,11 @@ export default function ExpensesPage() {
         return
       }
 
-      loadExpenses()
+      // 삭제 후 데이터 다시 로드
+      await Promise.all([
+        loadExpenses(supabase, user.id),
+        loadIncomes(supabase, user.id)
+      ])
     } catch (err) {
       console.error('삭제 오류:', err)
     }
@@ -153,8 +208,11 @@ export default function ExpensesPage() {
     return days[new Date(date).getDay()]
   }
 
-  const getDayNumber = (date: string) => {
-    return new Date(date).getDate().toString()
+  const getMonthAndDay = (date: string) => {
+    const d = new Date(date)
+    const month = d.getMonth() + 1
+    const day = d.getDate()
+    return `${month}월 ${day}일`
   }
 
   // 날짜별로 그룹화
@@ -177,6 +235,7 @@ export default function ExpensesPage() {
   )
 
   const totalExpense = expenses.reduce((sum, expense) => sum + expense.amount, 0)
+  const totalIncome = incomes.reduce((sum, income) => sum + income.amount, 0)
 
   const getCategoryInfo = (categoryName: string) => {
     return categories.get(categoryName) || { id: '', name: categoryName, icon: '📦', color: '#868E96' }
@@ -215,17 +274,17 @@ export default function ExpensesPage() {
         </div>
 
         {/* 필터 섹션 */}
-        <div className="bg-surface rounded-lg border border-border p-4 md:p-6 mb-4 md:mb-6">
+        <div className="bg-surface rounded-lg border border-border p-4 md:p-6 mb-4 md:mb-6 overflow-x-hidden">
           <h2 className="text-base md:text-lg font-semibold mb-3 md:mb-4" style={{ color: '#111111' }}>필터</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 w-full">
+            <div className="flex flex-col">
               <label className="block text-sm font-medium mb-2" style={{ color: '#565656' }}>
                 타입
               </label>
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value as any)}
-                className="w-full px-4 py-2 border border-border rounded-input bg-bg focus:ring-2 focus:ring-accent focus:border-transparent"
+                className="w-full h-10 px-4 py-2 border border-border rounded-input bg-bg focus:ring-2 focus:ring-accent focus:border-transparent"
                 style={{ color: '#111111' }}
               >
                 <option value="all">전체</option>
@@ -235,14 +294,14 @@ export default function ExpensesPage() {
               </select>
             </div>
 
-            <div>
+            <div className="flex flex-col">
               <label className="block text-sm font-medium mb-2" style={{ color: '#565656' }}>
                 감정
               </label>
               <select
                 value={filterEmotion}
                 onChange={(e) => setFilterEmotion(e.target.value)}
-                className="w-full px-4 py-2 border border-border rounded-input bg-bg focus:ring-2 focus:ring-accent focus:border-transparent"
+                className="w-full h-10 px-4 py-2 border border-border rounded-input bg-bg focus:ring-2 focus:ring-accent focus:border-transparent"
                 style={{ color: '#111111' }}
               >
                 <option value="all">전체</option>
@@ -254,24 +313,24 @@ export default function ExpensesPage() {
               </select>
             </div>
 
-            <div>
+            <div className="flex flex-col">
               <label className="block text-sm font-medium mb-2" style={{ color: '#565656' }}>
                 기간
               </label>
-              <div className="flex gap-2">
+              <div className="flex gap-2 w-full">
                 <input
                   type="date"
                   value={dateRange.start}
                   onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                  className="flex-1 px-4 py-2 border border-border rounded-input bg-bg focus:ring-2 focus:ring-accent focus:border-transparent"
-                  style={{ color: '#111111' }}
+                  className="flex-1 h-10 min-w-0 px-2 md:px-4 py-2 border border-border rounded-input bg-bg focus:ring-2 focus:ring-accent focus:border-transparent text-sm"
+                  style={{ color: '#111111', fontSize: '16px' }}
                 />
                 <input
                   type="date"
                   value={dateRange.end}
                   onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                  className="flex-1 px-4 py-2 border border-border rounded-input bg-bg focus:ring-2 focus:ring-accent focus:border-transparent"
-                  style={{ color: '#111111' }}
+                  className="flex-1 h-10 min-w-0 px-2 md:px-4 py-2 border border-border rounded-input bg-bg focus:ring-2 focus:ring-accent focus:border-transparent text-sm"
+                  style={{ color: '#111111', fontSize: '16px' }}
                 />
               </div>
             </div>
@@ -284,15 +343,15 @@ export default function ExpensesPage() {
             <div className="grid grid-cols-3 gap-2 md:gap-4">
               <div>
                 <p className="text-xs md:text-sm mb-1" style={{ color: '#8E8E93' }}>수입</p>
-                <p className="text-lg md:text-2xl font-bold" style={{ color: '#339AF0' }}>0</p>
+                <p className="text-lg md:text-2xl font-bold" style={{ color: '#339AF0' }}>{formatCurrency(totalIncome)}</p>
               </div>
               <div>
                 <p className="text-xs md:text-sm mb-1" style={{ color: '#8E8E93' }}>지출</p>
-                <p className="text-lg md:text-2xl font-bold" style={{ color: '#FF3B30' }}>{formatCurrency(totalExpense)}</p>
+                <p className="text-lg md:text-2xl font-bold" style={{ color: '#C92A2A' }}>{formatCurrency(totalExpense)}</p>
               </div>
               <div>
                 <p className="text-xs md:text-sm mb-1" style={{ color: '#8E8E93' }}>합계</p>
-                <p className="text-lg md:text-2xl font-bold" style={{ color: '#111111' }}>{formatCurrency(-totalExpense)}</p>
+                <p className="text-lg md:text-2xl font-bold" style={{ color: '#111111' }}>{formatCurrency(totalIncome - totalExpense)}</p>
               </div>
             </div>
           </div>
@@ -324,7 +383,7 @@ export default function ExpensesPage() {
                     {/* 날짜 헤더 */}
                     <div className="flex items-center gap-2 md:gap-3 mb-3">
                       <span className="text-xl md:text-2xl font-bold" style={{ color: '#111111' }}>
-                        {getDayNumber(group.date)}
+                        {getMonthAndDay(group.date)}
                       </span>
                       <span 
                         className="px-1.5 py-0.5 md:px-2 md:py-1 rounded-md text-xs font-medium text-white"
@@ -333,11 +392,8 @@ export default function ExpensesPage() {
                         {getDayOfWeek(group.date)}
                       </span>
                       <div className="flex-1 flex items-center justify-end gap-1 md:gap-2">
-                        <span className="text-xs md:text-sm" style={{ color: '#339AF0' }}>
+                        <span className="text-xs md:text-sm font-semibold" style={{ color: '#C92A2A' }}>
                           {formatCurrency(group.total)}원
-                        </span>
-                        <span className="text-xs md:text-sm" style={{ color: '#FF3B30' }}>
-                          0원
                         </span>
                       </div>
                     </div>
@@ -347,36 +403,54 @@ export default function ExpensesPage() {
                       {group.expenses.map((expense) => {
                         const catInfo = getCategoryInfo(expense.category)
                         return (
-                          <Link
+                          <div
                             key={expense.id}
-                            href={`/dashboard/expenses/${expense.id}/edit`}
-                            className="flex items-center gap-2 md:gap-3 p-2.5 md:p-3 rounded-lg bg-surface hover:bg-bg transition"
+                            className="flex items-center gap-2 md:gap-3 p-2.5 md:p-3 rounded-lg bg-surface hover:bg-bg transition group"
                           >
-                            <div className="text-xl md:text-2xl flex-shrink-0">{catInfo.icon || '📦'}</div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 flex-wrap">
-                                <p className="text-xs md:text-sm font-medium" style={{ color: '#111111' }}>
-                                  {expense.category}
-                                </p>
-                                <span 
-                                  className="px-1 py-0.5 md:px-1.5 md:py-0.5 rounded text-xs font-medium text-white flex-shrink-0"
-                                  style={{ backgroundColor: getTypeColor(expense.type) }}
-                                >
-                                  {getTypeLabel(expense.type)}
-                                </span>
+                            <Link
+                              href={`/dashboard/expenses/${expense.id}/edit`}
+                              className="flex items-center gap-2 md:gap-3 flex-1 min-w-0"
+                            >
+                              <div className="text-xl md:text-2xl flex-shrink-0">{catInfo.icon || '📦'}</div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 flex-wrap">
+                                  <p className="text-xs md:text-sm font-medium" style={{ color: '#111111' }}>
+                                    {expense.category}
+                                  </p>
+                                  <span 
+                                    className="px-1 py-0.5 md:px-1.5 md:py-0.5 rounded text-xs font-medium text-white flex-shrink-0"
+                                    style={{ backgroundColor: getTypeColor(expense.type) }}
+                                  >
+                                    {getTypeLabel(expense.type)}
+                                  </span>
+                                </div>
+                                {expense.reason && (
+                                  <p className="text-xs truncate" style={{ color: '#8E8E93' }}>
+                                    {expense.reason}
+                                  </p>
+                                )}
                               </div>
-                              {expense.reason && (
-                                <p className="text-xs truncate" style={{ color: '#8E8E93' }}>
-                                  {expense.reason}
+                              <div className="text-right flex-shrink-0">
+                                <p className="text-sm md:text-base font-semibold" style={{ color: '#C92A2A' }}>
+                                  {formatCurrency(expense.amount)}원
                                 </p>
-                              )}
-                            </div>
-                            <div className="text-right flex-shrink-0">
-                              <p className="text-sm md:text-base font-semibold" style={{ color: '#FF3B30' }}>
-                                {formatCurrency(expense.amount)}원
-                              </p>
-                            </div>
-                          </Link>
+                              </div>
+                            </Link>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                handleDelete(expense.id)
+                              }}
+                              className="ml-2 p-1.5 md:p-2 rounded-lg hover:bg-red-50 transition opacity-70 md:opacity-0 md:group-hover:opacity-100 flex-shrink-0"
+                              style={{ color: '#FF3B30' }}
+                              title="삭제"
+                            >
+                              <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
                         )
                       })}
                     </div>

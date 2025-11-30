@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { checkLoginLockout, getRemainingLockoutTime } from '@/lib/security'
 import HomeNav from '@/components/navbar/HomeNav'
 
 export default function LoginPage() {
@@ -15,9 +16,57 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [resendingEmail, setResendingEmail] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
+  const [failedAttempts, setFailedAttempts] = useState(0)
+  const [lockoutTime, setLockoutTime] = useState<number | null>(null)
+  const [remainingTime, setRemainingTime] = useState(0)
+
+  // 잠금 상태 체크
+  useEffect(() => {
+    if (lockoutTime) {
+      const interval = setInterval(() => {
+        const remaining = getRemainingLockoutTime(lockoutTime)
+        setRemainingTime(remaining)
+        if (remaining === 0) {
+          setLockoutTime(null)
+          setFailedAttempts(0)
+        }
+      }, 1000)
+      return () => clearInterval(interval)
+    }
+  }, [lockoutTime])
+
+  // 로컬 스토리지에서 실패 횟수 복원
+  useEffect(() => {
+    const stored = localStorage.getItem('login_failed_attempts')
+    const storedLockout = localStorage.getItem('login_lockout_time')
+    if (stored) {
+      const attempts = parseInt(stored, 10)
+      setFailedAttempts(attempts)
+      if (storedLockout) {
+        const lockout = parseInt(storedLockout, 10)
+        const remaining = getRemainingLockoutTime(lockout)
+        if (remaining > 0) {
+          setLockoutTime(lockout)
+          setRemainingTime(remaining)
+        } else {
+          localStorage.removeItem('login_failed_attempts')
+          localStorage.removeItem('login_lockout_time')
+        }
+      }
+    }
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // 잠금 상태 체크
+    if (lockoutTime && remainingTime > 0) {
+      const minutes = Math.floor(remainingTime / 60)
+      const seconds = remainingTime % 60
+      setError(`너무 많은 로그인 시도로 인해 계정이 잠겼습니다. ${minutes}분 ${seconds}초 후 다시 시도해주세요.`)
+      return
+    }
+
     setLoading(true)
     setError(null)
 
@@ -30,6 +79,21 @@ export default function LoginPage() {
       })
 
       if (signInError) {
+        // 로그인 실패 시 카운트 증가
+        const newFailedAttempts = failedAttempts + 1
+        setFailedAttempts(newFailedAttempts)
+        localStorage.setItem('login_failed_attempts', newFailedAttempts.toString())
+
+        // 5회 실패 시 잠금
+        if (checkLoginLockout(newFailedAttempts)) {
+          const lockout = Date.now()
+          setLockoutTime(lockout)
+          localStorage.setItem('login_lockout_time', lockout.toString())
+          setError('5회 연속 로그인 실패로 인해 15분간 로그인이 제한됩니다.')
+          setLoading(false)
+          return
+        }
+
         // 사용자 친화적인 에러 메시지로 변환
         let friendlyMessage = '로그인 중 오류가 발생했습니다.'
         
@@ -89,6 +153,12 @@ export default function LoginPage() {
       }
 
       if (data.user) {
+        // 로그인 성공 - 실패 횟수 초기화
+        setFailedAttempts(0)
+        localStorage.removeItem('login_failed_attempts')
+        localStorage.removeItem('login_lockout_time')
+        setLockoutTime(null)
+        
         // 로그인 성공 - 로딩 상태 해제 후 대시보드로 이동
         setLoading(false)
         router.push('/dashboard')
@@ -151,6 +221,10 @@ export default function LoginPage() {
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            prompt: 'consent',
+            access_type: 'offline',
+          },
         },
       })
 
@@ -270,8 +344,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* 구글 로그인 - 도메인 구매 및 앱 안정화 후 재활성화 예정 */}
-          {/* 
+          {/* 구글 로그인 */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300"></div>
@@ -305,7 +378,6 @@ export default function LoginPage() {
             </svg>
             <span style={{ color: '#111111' }}>구글로 로그인</span>
           </button>
-          */}
 
           <div className="mt-6 space-y-3">
             <div className="text-center">
