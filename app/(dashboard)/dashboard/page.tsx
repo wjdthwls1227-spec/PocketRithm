@@ -29,15 +29,6 @@ export default function DashboardPage() {
 
         setUser(currentUser)
 
-        // 프로필 정보
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', currentUser.id)
-          .single()
-
-        setProfile(profileData)
-
         // 오늘 날짜
         const today = new Date().toISOString().split('T')[0]
         
@@ -46,27 +37,34 @@ export default function DashboardPage() {
         const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
         const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0]
 
-        // 오늘 지출 합계
-        const { data: todayExpenses } = await supabase
-          .from('expenses')
-          .select('amount')
-          .eq('user_id', currentUser.id)
-          .eq('date', today)
+        // 모든 데이터를 병렬로 로드
+        const [profileResult, todayExpensesResult, monthExpensesResult] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', currentUser.id)
+            .single(),
+          supabase
+            .from('expenses')
+            .select('amount')
+            .eq('user_id', currentUser.id)
+            .eq('date', today),
+          supabase
+            .from('expenses')
+            .select('amount, type')
+            .eq('user_id', currentUser.id)
+            .gte('date', firstDayOfMonth)
+            .lte('date', lastDayOfMonth)
+        ])
 
-        // 이번 달 지출 합계 및 타입별 집계
-        const { data: monthExpenses } = await supabase
-          .from('expenses')
-          .select('amount, type')
-          .eq('user_id', currentUser.id)
-          .gte('date', firstDayOfMonth)
-          .lte('date', lastDayOfMonth)
+        setProfile(profileResult.data)
 
-        const todaySum = todayExpenses?.reduce((sum, e) => sum + e.amount, 0) || 0
-        const monthSum = monthExpenses?.reduce((sum, e) => sum + e.amount, 0) || 0
+        const todaySum = todayExpensesResult.data?.reduce((sum, e) => sum + e.amount, 0) || 0
+        const monthSum = monthExpensesResult.data?.reduce((sum, e) => sum + e.amount, 0) || 0
 
         // 타입별 집계
         const typeMap: Record<string, number> = { desire: 0, lack: 0, need: 0 }
-        monthExpenses?.forEach((expense) => {
+        monthExpensesResult.data?.forEach((expense) => {
           if (expense.type in typeMap) {
             typeMap[expense.type] += expense.amount
           }
@@ -89,7 +87,7 @@ export default function DashboardPage() {
     }
 
     loadData()
-  }, [])
+  }, [router])
 
   const budget = profile?.monthly_budget || 0
   const budgetUsage = budget > 0 ? Math.round((monthTotal / budget) * 100) : 0

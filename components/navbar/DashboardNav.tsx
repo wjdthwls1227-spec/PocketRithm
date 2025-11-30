@@ -7,40 +7,47 @@ import { signOut } from '@/app/actions/auth'
 import { createClient } from '@/lib/supabase/client'
 import { isAdmin } from '@/lib/utils/admin'
 
-export default function DashboardNav() {
+interface DashboardNavProps {
+  user?: any
+  profile?: any
+}
+
+export default function DashboardNav({ user: initialUser, profile: initialProfile }: DashboardNavProps) {
   const pathname = usePathname()
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [user, setUser] = useState<any>(null)
-  const [profile, setProfile] = useState<any>(null)
+  const [user, setUser] = useState<any>(initialUser || null)
+  const [profile, setProfile] = useState<any>(initialProfile || null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const userMenuRef = useRef<HTMLDivElement>(null)
   const mobileMenuRef = useRef<HTMLDivElement>(null)
 
-  // 사용자 정보 로드
+  // 레이아웃에서 사용자 정보를 받지 못한 경우에만 로드
   useEffect(() => {
-    async function loadUser() {
-      try {
-        const supabase = createClient()
-        const { data: { user: currentUser } } = await supabase.auth.getUser()
-        setUser(currentUser)
+    if (!user || !profile) {
+      async function loadUser() {
+        try {
+          const supabase = createClient()
+          const { data: { user: currentUser } } = await supabase.auth.getUser()
+          setUser(currentUser)
 
-        if (currentUser) {
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', currentUser.id)
-            .single()
-          setProfile(profileData)
+          if (currentUser) {
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', currentUser.id)
+              .single()
+            setProfile(profileData)
+          }
+        } catch (err) {
+          console.error('사용자 정보 로드 오류:', err)
         }
-      } catch (err) {
-        console.error('사용자 정보 로드 오류:', err)
       }
-    }
 
-    loadUser()
-  }, [])
+      loadUser()
+    }
+  }, [user, profile])
 
   // 외부 클릭 시 드롭다운 닫기
   useEffect(() => {

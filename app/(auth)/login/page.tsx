@@ -10,6 +10,7 @@ export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(true) // 기본값을 true로 설정하여 자동로그인 활성화
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [resendingEmail, setResendingEmail] = useState(false)
@@ -88,7 +89,8 @@ export default function LoginPage() {
       }
 
       if (data.user) {
-        // 로그인 성공 - 대시보드로 이동
+        // 로그인 성공 - 로딩 상태 해제 후 대시보드로 이동
+        setLoading(false)
         router.push('/dashboard')
         router.refresh()
       }
@@ -244,6 +246,20 @@ export default function LoginPage() {
                 </p>
               </div>
             )}
+
+            {/* 로그인 유지 옵션 */}
+            <div className="flex items-center">
+              <input
+                id="rememberMe"
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-700">
+                로그인 상태 유지
+              </label>
+            </div>
 
             <button
               type="submit"
