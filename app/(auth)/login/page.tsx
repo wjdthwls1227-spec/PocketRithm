@@ -225,13 +225,16 @@ export default function LoginPage() {
             prompt: 'consent',
             access_type: 'offline',
           },
+          scopes: 'email profile',
         },
       })
 
       if (error) {
-        setError('구글 로그인 중 오류가 발생했습니다.')
+        console.error('구글 로그인 오류:', error)
+        setError(`구글 로그인 중 오류가 발생했습니다: ${error.message}`)
       }
     } catch (err) {
+      console.error('구글 로그인 예외:', err)
       setError('구글 로그인 중 오류가 발생했습니다.')
     }
   }
