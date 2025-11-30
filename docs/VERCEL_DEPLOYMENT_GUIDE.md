@@ -156,3 +156,4 @@ NEXT_PUBLIC_APP_URL=https://pocketrithm.com
 - Supabase 대시보드: https://supabase.com/dashboard
 - Google Cloud Console: https://console.cloud.google.com
 
+

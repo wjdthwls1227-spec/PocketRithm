@@ -122,3 +122,4 @@ Client Secret (for OAuth): GOCSPX-abcdefghijklmnopqrstuvwxyz
 
 이 두 값이 모두 입력되어 있어야 정상 작동합니다!
 
+

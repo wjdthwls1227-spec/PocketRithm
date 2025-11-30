@@ -171,3 +171,4 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 - [ ] 소셜 로그인 설정 완료 (선택사항)
 - [ ] 개발 서버 실행 성공
 
+

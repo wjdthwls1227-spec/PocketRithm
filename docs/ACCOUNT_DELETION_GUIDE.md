@@ -85,3 +85,4 @@ Service Role Key가 없으면:
 2. 개발 서버 재시작
 3. 또는 Supabase 대시보드에서 수동 삭제
 
+

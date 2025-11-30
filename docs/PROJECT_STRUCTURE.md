@@ -123,3 +123,4 @@ PocketRithm/
 3. `supabase/schema.sql` 실행하여 데이터베이스 생성
 4. `DEVELOPMENT_PLAN.md` 참고하여 단계별 개발 진행
 
+

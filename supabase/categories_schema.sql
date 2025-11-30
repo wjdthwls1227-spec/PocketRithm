@@ -37,3 +37,4 @@ CREATE POLICY "Users can delete own categories" ON public.user_categories
 CREATE TRIGGER update_user_categories_updated_at BEFORE UPDATE ON public.user_categories
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+

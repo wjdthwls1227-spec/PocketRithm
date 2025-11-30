@@ -101,3 +101,4 @@ CREATE TRIGGER update_user_categories_updated_at BEFORE UPDATE ON public.user_ca
 - 카테고리 관리 페이지에서 "기본 카테고리 추가" 버튼 클릭
 - 또는 기존 지출/수입 기록에서 자동으로 카테고리 추출
 
+

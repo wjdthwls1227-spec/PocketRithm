@@ -113,3 +113,4 @@ Supabase 대시보드에서:
 - Rate limiting 설정 확인 (Minimum interval per user)
 - 발신자 이름이 "회고리즘"으로 설정되어 있는데, "포켓리즘"으로 변경하는 것을 권장합니다
 
+

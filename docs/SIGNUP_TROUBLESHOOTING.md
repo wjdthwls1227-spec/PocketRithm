@@ -97,3 +97,4 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 회원가입 페이지에서 더 자세한 오류 정보를 확인할 수 있도록 개선했습니다. 
 오류 메시지를 확인하여 정확한 원인을 파악하세요.
 
+

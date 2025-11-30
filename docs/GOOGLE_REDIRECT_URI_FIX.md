@@ -106,3 +106,4 @@ http://localhost:3000/auth/callback
 3. 대소문자, 슬래시, 프로토콜(https) 모두 확인
 4. 설정 저장 후 몇 분 기다린 후 재시도
 
+

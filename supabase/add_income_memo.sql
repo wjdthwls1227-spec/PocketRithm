@@ -4,3 +4,4 @@
 ALTER TABLE public.incomes 
 ADD COLUMN IF NOT EXISTS memo TEXT;
 
+
