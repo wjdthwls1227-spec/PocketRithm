@@ -75,7 +75,7 @@ export default function IncomePage() {
       }
 
       const categoryMap = new Map<string, Category>()
-      data?.forEach(cat => {
+      data?.forEach((cat: { id: string; name: string; icon: string | null; color: string | null }) => {
         categoryMap.set(cat.name, {
           id: cat.id,
           name: cat.name,

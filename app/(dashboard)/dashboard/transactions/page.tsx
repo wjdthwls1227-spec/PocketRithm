@@ -30,8 +30,8 @@ type GroupedTransaction = {
 }
 
 export default function TransactionsPage() {
-  const [expenses, setExpenses] = useState<Expense[]>([])
-  const [incomes, setIncomes] = useState<Income[]>([])
+  const [expenses, setExpenses] = useState<any[]>([])
+  const [incomes, setIncomes] = useState<any[]>([])
   const [expenseCategories, setExpenseCategories] = useState<Map<string, Category>>(new Map())
   const [incomeCategories, setIncomeCategories] = useState<Map<string, Category>>(new Map())
   const [loading, setLoading] = useState(true)
@@ -103,14 +103,14 @@ export default function TransactionsPage() {
       // 지출과 수입 쿼리 준비
       let expenseQuery = supabase
         .from('expenses')
-        .select('id, amount, category, type, reason, date, created_at')
+        .select('id, user_id, amount, category, type, emotions, reason, date, created_at')
         .eq('user_id', user.id)
         .order('date', { ascending: false })
         .order('created_at', { ascending: false })
 
       let incomeQuery = supabase
         .from('incomes')
-        .select('id, amount, source, memo, date, created_at')
+        .select('id, user_id, amount, source, memo, date, created_at')
         .eq('user_id', user.id)
         .order('date', { ascending: false })
         .order('created_at', { ascending: false })
